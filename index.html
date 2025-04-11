@@ -4,13 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Drone Sentinel</title>
+    
+    <!-- Favicon references -->
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+    <link rel="shortcut icon" href="images/favicon.png">
 
     <!-- TensorFlow.js libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.4.0/dist/speech-commands.min.js"></script>
     
-    <!-- Link to our custom script (defer ensures DOM is loaded before execution) -->
+    <!-- Link to our custom scripts (defer ensures DOM is loaded before execution) -->
     <script src="main.js" defer></script>
+    <script src="version.js" defer></script>
     
     <!-- Font definitions -->
     <style>
@@ -707,6 +713,10 @@
         <div style="margin-top: 10px; font-size: 12px; color: #555;">
             <span class="material-icons" style="font-size: 14px; vertical-align: middle; margin-right: 5px;">copyright</span>
             <span id="current-year">2025</span> Drone Sentinel - AI-Powered Sound Detection System
+        </div>
+        <div style="margin-top: 5px; font-size: 11px; color: #777; font-family: monospace;">
+            <span class="material-icons" style="font-size: 12px; vertical-align: middle; margin-right: 3px;">tag</span>
+            <span id="app-version">Loading version...</span>
         </div>
     </footer>
     
