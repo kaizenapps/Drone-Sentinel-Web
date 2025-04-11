@@ -140,7 +140,7 @@ function updateGauge(value, label) {
     // We add 90 to make 0 the starting point, then divide by 360 for turns
     // 0% = 0 turn (empty), 100% = 0.5 turn (half circle)
     const fillRotation = (percentage / 200); // Convert percentage to turns (0.5 turn = 100%)
-    gaugeFill.style.transform = `rotate(${0.5 - fillRotation}turn)`; // Start from full (0.5) and decrease
+    gaugeFill.style.transform = `rotate(${0.5 + fillRotation}turn)`; // Start from full (0.5) and decrease
     
     // Update the value text
     gaugeValue.textContent = `${percentage.toFixed(1)}%`;
