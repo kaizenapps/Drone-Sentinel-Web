@@ -158,7 +158,7 @@ function updateGauge(value, label) {
 }
 
 // Update frequency for the accelerometer (milliseconds)
-const ACCELEROMETER_UPDATE_INTERVAL = 50; // 20 updates per second
+const ACCELEROMETER_UPDATE_INTERVAL = 16; // ~60 updates per second for smoother animation
 let lastPredictionScores = [];
 let accelerometerIntervalId = null;
 
@@ -255,10 +255,10 @@ function renderSpectrogram() {
     // than waiting for new audio analysis
     if (lastPredictionScores.length > 0) {
         accelerometerIntervalId = setInterval(() => {
-            // Add slight random variations to make the gauge more dynamic
+            // Add subtle random variations to make the gauge more dynamic but still smooth
             const modifiedScores = lastPredictionScores.map(score => {
-                // Add up to ±7% random variation to make gauge movement more interesting
-                const variation = (Math.random() * 0.14) - 0.07;
+                // Add up to ±3% random variation with higher update rate for smoother movement
+                const variation = (Math.random() * 0.06) - 0.03;
                 return Math.max(0, Math.min(1, score + (score * variation)));
             });
             updatePredictionBars(modifiedScores);
