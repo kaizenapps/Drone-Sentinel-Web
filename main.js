@@ -76,12 +76,13 @@ function updatePredictionBars(scores) {
     // Make sure we have labels and scores
     if (!labels || !scores || labels.length === 0 || scores.length === 0) return;
     
-    // Find the maximum score for the gauge
-    const maxScore = Math.max(...scores);
-    const maxIndex = scores.indexOf(maxScore);
+    // Get the FPV Drone confidence (index 1) for the gauge
+    // If we only have one label, use that one instead
+    const fpvDroneIndex = (labels.length > 1) ? 1 : 0; // Assuming FPV Drone is at index 1
+    const fpvDroneScore = scores[fpvDroneIndex];
     
-    // Update the gauge
-    updateGauge(maxScore, labels[maxIndex]);
+    // Update the gauge with only the FPV Drone confidence
+    updateGauge(fpvDroneScore, labels[fpvDroneIndex]);
     
     // Create a bar for each label/score pair
     for (let i = 0; i < labels.length; i++) {
@@ -117,7 +118,7 @@ function updatePredictionBars(scores) {
     }
 }
 
-// Update the gauge with the highest prediction value
+// Function to update the gauge with the FPV Drone prediction value
 function updateGauge(value, label) {
     // Get gauge elements
     const gaugeFill = document.getElementById('gauge-fill');
@@ -127,29 +128,32 @@ function updateGauge(value, label) {
     
     if (!gaugeFill || !gaugePointer || !gaugeValue || !gaugeLabel) return;
     
-    // Calculate rotation angle for gauge fill and pointer
-    // 0% = -90 degrees (or -π/2 radians), 100% = 90 degrees (or π/2 radians)
+    // Calculate percentage and convert to consistent rotation values
     const percentage = value * 100;
-    const angle = -90 + (percentage * 1.8); // 1.8 degrees per percentage point (180 / 100)
     
-    // Update the gauge fill by rotating it
-    // The fill is rotated from the bottom center, so we're actually hiding part of it
-    // by rotating it counter-clockwise
-    const fillRotation = 0.5 - (value * 0.5); // 0.5 turns (180 degrees) at 0%, 0 turns at 100%
-    gaugeFill.style.transform = `rotate(${fillRotation}turn)`;
+    // For the pointer: -90deg (0%) to +90deg (100%)
+    // 1.8 = 180 degrees spread / 100 percent
+    const pointerAngleDeg = -90 + (percentage * 1.8); 
+    gaugePointer.style.transform = `rotate(${pointerAngleDeg}deg)`;
     
-    // Update the pointer
-    gaugePointer.style.transform = `rotate(${angle}deg)`;
+    // For the fill: Convert pointer angle to match exactly in turns
+    // We add 90 to make 0 the starting point, then divide by 360 for turns
+    // 0% = 0 turn (empty), 100% = 0.5 turn (half circle)
+    const fillRotation = (percentage / 200); // Convert percentage to turns (0.5 turn = 100%)
+    gaugeFill.style.transform = `rotate(${0.5 - fillRotation}turn)`; // Start from full (0.5) and decrease
     
     // Update the value text
     gaugeValue.textContent = `${percentage.toFixed(1)}%`;
     
+    // Always use "FPV Drone" for gauge label text if available
+    const droneLabel = (labels.length > 1) ? labels[1] : label;
+    
     // Update the label
     if (percentage > 60) {
-        gaugeLabel.textContent = `${label} detected!`;
+        gaugeLabel.textContent = `${droneLabel} detected!`;
         gaugeLabel.style.color = '#d32f2f'; // Red for high confidence
     } else if (percentage > 30) {
-        gaugeLabel.textContent = `Possible ${label}`;
+        gaugeLabel.textContent = `Possible ${droneLabel}`;
         gaugeLabel.style.color = '#f57c00'; // Orange for medium confidence
     } else {
         gaugeLabel.textContent = 'Listening...';
@@ -255,12 +259,20 @@ function renderSpectrogram() {
     // than waiting for new audio analysis
     if (lastPredictionScores.length > 0) {
         accelerometerIntervalId = setInterval(() => {
-            // Add subtle random variations to make the gauge more dynamic but still smooth
-            const modifiedScores = lastPredictionScores.map(score => {
+            // Create a copy of the original scores
+            const modifiedScores = [...lastPredictionScores];
+            
+            // Get the FPV Drone index (assuming it's at index 1)
+            const fpvDroneIndex = (labels.length > 1) ? 1 : 0;
+            
+            // Only add variations to the FPV Drone score, keep other scores unchanged
+            if (modifiedScores[fpvDroneIndex] !== undefined) {
                 // Add up to ±3% random variation with higher update rate for smoother movement
                 const variation = (Math.random() * 0.06) - 0.03;
-                return Math.max(0, Math.min(1, score + (score * variation)));
-            });
+                modifiedScores[fpvDroneIndex] = Math.max(0, Math.min(1, 
+                    modifiedScores[fpvDroneIndex] + (modifiedScores[fpvDroneIndex] * variation)));
+            }
+            
             updatePredictionBars(modifiedScores);
         }, ACCELEROMETER_UPDATE_INTERVAL);
     }
