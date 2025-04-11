@@ -519,6 +519,22 @@
 </head>
 
 <body>
+    <!-- Alarm popup that appears when a drone is detected -->
+    <div id="alarm-popup" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 500px; background-color: #b71c1c; padding: 30px; border-radius: 12px; z-index: 2000; box-shadow: 0 0 50px rgba(255, 61, 61, 0.7), 0 0 100px rgba(255, 0, 0, 0.5); animation: pulse 1.5s infinite; text-align: center;">
+        <div style="position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; background-color: rgba(0,0,0,0.3); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer;" onclick="dismissAlarm()">
+            <span class="material-icons" style="color: white; font-size: 20px;">close</span>
+        </div>
+        <div style="display: flex; justify-content: center; margin-bottom: 20px;">
+            <span class="material-icons" style="font-size: 60px; color: white; animation: shake 0.5s infinite;">warning</span>
+        </div>
+        <h2 style="color: white; font-size: 28px; margin: 0 0 15px 0; font-family: 'Exo', sans-serif; text-transform: uppercase; letter-spacing: 2px;">DRONE DETECTED!</h2>
+        <p style="color: white; font-size: 18px; margin-bottom: 25px;">A drone has been detected in the vicinity with <span id="alarm-confidence">0</span>% confidence.</p>
+        <div style="display: flex; justify-content: space-around;">
+            <button id="snooze-alarm" style="background-color: rgba(0,0,0,0.3); color: white; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 16px;" onclick="snoozeAlarm(5)">Snooze 5m</button>
+            <button id="dismiss-alarm" style="background-color: white; color: #b71c1c; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: bold; font-size: 16px;" onclick="dismissAlarm()">Dismiss</button>
+        </div>
+    </div>
+    
     <!-- Work in progress banner -->
     <div style="position: fixed; top: 0; left: 0; width: 100%; background: linear-gradient(90deg, #ff3d3d, #a10000); color: white; text-align: center; padding: 15px; font-size: 18px; font-weight: bold; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.3); letter-spacing: 0.5px;">
         Work in progress, click <a href="https://forms.clickup.com/20570259/f/kkr4k-4451/NMY2NBB72FOHF7K15R" style="color: white; text-decoration: underline; font-weight: bold; text-shadow: 0 0 5px rgba(0,0,0,0.3);" target="_blank">(here)</a> for support
@@ -694,10 +710,43 @@
         </div>
     </footer>
     
+    <!-- Alarm sound effect -->
+    <audio id="alarm-sound" loop>
+        <source src="https://cdn.freesound.org/previews/250/250629_4486188-lq.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    
     <!-- Update year automatically -->
     <script>
         document.getElementById('current-year').textContent = new Date().getFullYear();
     </script>
+    
+    <!-- Add alarm-related animations -->
+    <style>
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.05); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+        
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(0); }
+            75% { transform: translateX(5px); }
+            100% { transform: translateX(0); }
+        }
+        
+        .alarm-active #alert {
+            animation: pulse-background 1s infinite;
+        }
+        
+        @keyframes pulse-background {
+            0% { background-color: #2c2c2c; }
+            50% { background-color: #b71c1c; }
+            100% { background-color: #2c2c2c; }
+        }
+    </style>
 </body>
 </html>
 

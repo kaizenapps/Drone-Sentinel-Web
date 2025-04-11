@@ -14,7 +14,7 @@ let dataArray = null;
 let bufferLength = 0;
 
 // Default confidence threshold (0-1)
-let confidenceThreshold = 0.60;
+let confidenceThreshold = 0.80; // Set to 80% for higher certainty
 
 // Check if the browser supports getUserMedia
 function isMicrophoneSupported() {
@@ -193,7 +193,11 @@ function updateSliderAppearance(value) {
     const percent = value;
     const slider = document.getElementById('confidence-threshold');
     if (slider) {
-        slider.style.background = `linear-gradient(to right, #ff3d3d, #ff3d3d ${percent}%, #444 ${percent}%, #444)`;
+        // Ensure the value is treated as a number
+        const numericValue = parseInt(value);
+        if (!isNaN(numericValue)) {
+            slider.style.background = `linear-gradient(to right, #ff3d3d, #ff3d3d ${numericValue}%, #444 ${numericValue}%, #444)`;
+        }
     }
 }
 
@@ -205,6 +209,12 @@ function initConfidenceThresholdSlider() {
     
     if (!slider || !thresholdValue) return;
     
+    // Set initial values
+    // Make sure slider value matches the default confidenceThreshold (0.60)
+    slider.value = confidenceThreshold * 100;
+    thresholdValue.textContent = `${Math.round(confidenceThreshold * 100)}%`;
+    updateSliderAppearance(slider.value);
+    
     // Try to load saved threshold from cookie
     const savedThreshold = getCookie('dronesentinel_threshold');
     if (savedThreshold !== null) {
@@ -212,6 +222,7 @@ function initConfidenceThresholdSlider() {
         slider.value = confidenceThreshold * 100;
         thresholdValue.textContent = `${Math.round(confidenceThreshold * 100)}%`;
         updateSliderAppearance(slider.value);
+        console.log('Loaded saved threshold:', confidenceThreshold);
     }
     
     // Add event listener for slider changes
@@ -220,9 +231,20 @@ function initConfidenceThresholdSlider() {
         confidenceThreshold = value / 100;
         thresholdValue.textContent = `${value}%`;
         updateSliderAppearance(value);
+        console.log('Threshold updated to:', confidenceThreshold);
         
         // Save to cookie (valid for 365 days)
         setCookie('dronesentinel_threshold', confidenceThreshold, 365);
+    });
+    
+    // Also add change event for when slider stops moving
+    slider.addEventListener('change', function() {
+        const value = parseInt(this.value);
+        console.log('Threshold change committed:', value/100);
+        // Update slider initial value display to match new default threshold (80%)
+        slider.value = value;
+        thresholdValue.textContent = `${value}%`;
+        updateSliderAppearance(value);
     });
     
     // Add shimmer animation effect on button hover
@@ -669,8 +691,13 @@ function processAudioPrediction(scores) {
     
     // Only consider it a detection if confidence is above the user-configured threshold
     // and it's not the background noise class (unless background is the only class)
-    if (maxValue > confidenceThreshold && (maxIndex !== 0 || labels.length === 1)) {
+    // For FPV Drone detection (index 1), use the confidenceThreshold directly
+    const fpvDroneIndex = (labels.length > 1) ? 1 : 0;
+    
+    if ((maxIndex === fpvDroneIndex && scores[fpvDroneIndex] > confidenceThreshold) || 
+        (maxIndex !== 0 && maxIndex !== fpvDroneIndex && maxValue > confidenceThreshold)) {
         newPrediction = labels[maxIndex];
+        console.log(`Detection triggered: ${labels[maxIndex]} (${maxValue.toFixed(2)}) > threshold (${confidenceThreshold.toFixed(2)})`);
     }
     
     // Only update status UI if prediction changed
@@ -686,7 +713,7 @@ function updateUI(prediction) {
     const statusElement = document.getElementById('status');
     const detectionStatusText = document.getElementById('detection-status-text');
     const alertElement = document.getElementById('alert');
-    
+
     if (statusElement) {
         if (detectionStatusText) {
             // Update the new UI element
@@ -694,6 +721,14 @@ function updateUI(prediction) {
                 detectionStatusText.textContent = `${prediction} detected!`;
                 detectionStatusText.style.color = '#ffffff'; // White text for visibility
                 statusElement.style.borderLeft = '3px solid #f44336';
+
+                // If FPV Drone is detected, check if we should trigger the alarm
+                const fpvDroneIndex = (labels.length > 1) ? 1 : 0;
+                if (prediction === labels[fpvDroneIndex]) {
+                    // Get the current confidence score for the drone
+                    const droneConfidence = lastPredictionScores[fpvDroneIndex];
+                    triggerAlarm(droneConfidence);
+                }
             } else {
                 detectionStatusText.textContent = 'No sounds detected';
                 detectionStatusText.style.color = '#ffffff'; // White text for visibility
@@ -704,22 +739,19 @@ function updateUI(prediction) {
             statusElement.textContent = `Current sound: ${prediction || "None"}`;
         }
     }
-    
+
+    // Update the alert element with detection status
     if (alertElement) {
-        // Background Noise is typically the first class (index 0)
-        // and we want to show alerts only for other detected sounds
         if (prediction && prediction !== labels[0] && labels.length > 1) {
-            // A non-background sound was detected
             alertElement.textContent = `ALERT: ${prediction} detected!`;
             alertElement.style.backgroundColor = '#2c0000'; // Dark red background
             alertElement.style.color = '#ff3d3d'; // Red text
             alertElement.style.borderLeft = '4px solid #ff3d3d';
         } else {
-            // No sound or just background noise
-            alertElement.textContent = "Listening for sounds...";
-            alertElement.style.backgroundColor = '#1e1e1e';
-            alertElement.style.color = "#4caf50"; // Green text
-            alertElement.style.borderLeft = '4px solid #2c2c2c';
+            alertElement.textContent = 'Monitoring for drone sounds...';
+            alertElement.style.backgroundColor = '#2c2c2c';
+            alertElement.style.color = '#e0e0e0';
+            alertElement.style.borderLeft = '4px solid #333';
         }
     }
 }
@@ -978,11 +1010,114 @@ async function analyzeAudioBuffer(audioBuffer) {
     }
 }
 
+// Alarm system variables
+let alarmActive = false;
+let alarmSnoozed = false;
+let alarmSnoozeTimeout = null;
+
+// Function to trigger the alarm when a drone is detected
+function triggerAlarm(confidence) {
+    // Don't trigger if already active or snoozed
+    if (alarmActive || alarmSnoozed) return;
+    
+    alarmActive = true;
+    
+    // Update the alarm popup with the confidence level
+    const confidenceElement = document.getElementById('alarm-confidence');
+    if (confidenceElement) {
+        confidenceElement.textContent = Math.round(confidence * 100);
+    }
+    
+    // Show the alarm popup
+    const alarmPopup = document.getElementById('alarm-popup');
+    if (alarmPopup) {
+        alarmPopup.style.display = 'block';
+    }
+    
+    // Play the alarm sound
+    const alarmSound = document.getElementById('alarm-sound');
+    if (alarmSound) {
+        alarmSound.play().catch(e => console.error('Could not play alarm sound:', e));
+    }
+    
+    // Add alarm active class to body for additional visual cues
+    document.body.classList.add('alarm-active');
+    
+    console.log('ALARM TRIGGERED with confidence:', confidence);
+}
+
+// Function to dismiss the alarm
+function dismissAlarm() {
+    if (!alarmActive) return;
+    
+    alarmActive = false;
+    
+    // Hide the alarm popup
+    const alarmPopup = document.getElementById('alarm-popup');
+    if (alarmPopup) {
+        alarmPopup.style.display = 'none';
+    }
+    
+    // Stop the alarm sound
+    const alarmSound = document.getElementById('alarm-sound');
+    if (alarmSound) {
+        alarmSound.pause();
+        alarmSound.currentTime = 0;
+    }
+    
+    // Remove alarm active class
+    document.body.classList.remove('alarm-active');
+    
+    console.log('Alarm dismissed');
+}
+
+// Function to snooze the alarm for a specified number of minutes
+function snoozeAlarm(minutes) {
+    if (!alarmActive) return;
+    
+    alarmActive = false;
+    alarmSnoozed = true;
+    
+    // Hide the alarm popup
+    const alarmPopup = document.getElementById('alarm-popup');
+    if (alarmPopup) {
+        alarmPopup.style.display = 'none';
+    }
+    
+    // Stop the alarm sound
+    const alarmSound = document.getElementById('alarm-sound');
+    if (alarmSound) {
+        alarmSound.pause();
+        alarmSound.currentTime = 0;
+    }
+    
+    // Remove alarm active class
+    document.body.classList.remove('alarm-active');
+    
+    // Clear any existing snooze timeout
+    if (alarmSnoozeTimeout) {
+        clearTimeout(alarmSnoozeTimeout);
+    }
+    
+    // Set a timeout to re-enable the alarm after the snooze period
+    const snoozeMs = minutes * 60 * 1000;
+    alarmSnoozeTimeout = setTimeout(() => {
+        alarmSnoozed = false;
+        console.log('Alarm snooze period ended');
+    }, snoozeMs);
+    
+    console.log(`Alarm snoozed for ${minutes} minutes`);
+}
+
 // Initialize the app when the page loads
 async function initApp() {
     // Initialize the confidence threshold slider first
     initConfidenceThresholdSlider();
     console.log('Confidence threshold slider initialized with value:', confidenceThreshold);
+    
+    // Add global functions for the alarm system
+    window.dismissAlarm = dismissAlarm;
+    window.snoozeAlarm = snoozeAlarm;
     
     // Initialize the spectrogram first
     const spectrogramInitialized = initSpectrogram();
