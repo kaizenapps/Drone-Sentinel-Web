@@ -3,8 +3,6 @@ let currentPrediction = "";
 let predictionCallback;
 let microphoneEnabled = false;
 let audioContext = null;
-let selectedFile = null;
-let isAnalyzing = false;
 let analyser = null;
 let microphone = null;
 let spectrogramCanvas = null;
@@ -584,7 +582,7 @@ async function startListening() {
         const modelParameters = {
             invokeCallbackOnNoiseAndUnknown: true, // run even when only background noise is detected
             includeSpectrogram: true, // give us access to numerical audio data
-            overlapFactor: 0.5 // how often per second to sample audio, 0.5 means twice per second
+            overlapFactor: 0.2 // how often per second to sample audio, 0.5 means twice per second
         };
 
         // Start listening with the loaded model
@@ -756,264 +754,43 @@ function updateUI(prediction) {
     }
 }
 
-// Function to handle audio file upload
-function handleFileUpload(event) {
-    const file = event.target.files[0];
-    if (!file) {
-        return;
-    }
 
-    selectedFile = file;
-    const fileInfoElement = document.getElementById('file-info');
-    const analyzeButton = document.getElementById('analyze-button');
-    
-    // Update file info display
-    if (fileInfoElement) {
-        fileInfoElement.textContent = `Selected file: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
-    }
-    
-    // Enable analyze button
-    if (analyzeButton) {
-        analyzeButton.disabled = false;
-    }
-}
-
-// Function to analyze the uploaded audio file
-async function analyzeAudioFile() {
-    if (!selectedFile || !model || isAnalyzing) {
-        return;
-    }
-    
-    try {
-        isAnalyzing = true;
-        
-        // Update UI to show processing
-        const analyzeButton = document.getElementById('analyze-button');
-        const progressContainer = document.getElementById('progress-container');
-        const progressBar = document.getElementById('progress-bar');
-        const resultElement = document.getElementById('file-analysis-result');
-        
-        if (analyzeButton) {
-            analyzeButton.disabled = true;
-            analyzeButton.textContent = 'Analyzing...';
-        }
-        
-        if (progressContainer) {
-            progressContainer.style.display = 'block';
-        }
-        
-        if (progressBar) {
-            progressBar.style.width = '10%';
-        }
-        
-        // Create AudioContext if it doesn't exist
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        
-        // Read the file
-        const fileReader = new FileReader();
-        
-        // Set up promise to handle file reading
-        const fileLoaded = new Promise((resolve, reject) => {
-            fileReader.onload = resolve;
-            fileReader.onerror = reject;
-            fileReader.readAsArrayBuffer(selectedFile);
-        });
-        
-        // Wait for file to be read
-        await fileLoaded;
-        
-        if (progressBar) {
-            progressBar.style.width = '30%';
-        }
-        
-        // Decode the audio
-        const audioBuffer = await audioContext.decodeAudioData(fileReader.result);
-        
-        if (progressBar) {
-            progressBar.style.width = '50%';
-        }
-        
-        // Analyze the audio using the model
-        const predictions = await analyzeAudioBuffer(audioBuffer);
-        
-        if (progressBar) {
-            progressBar.style.width = '90%';
-        }
-        
-        // Process results and update UI
-        setTimeout(() => {
-            if (progressBar) {
-                progressBar.style.width = '100%';
-            }
-            
-            if (analyzeButton) {
-                analyzeButton.disabled = false;
-                analyzeButton.textContent = 'Analyze Audio';
-            }
-            
-            // Store the predictions for high-frequency updates
-            lastPredictionScores = [...predictions];
-            
-            // Update the prediction meters with the analysis results
-            updatePredictionBars(predictions);
-            
-            // Display results
-            if (resultElement) {
-                resultElement.style.display = 'block';
-                
-                // Format the predictions
-                let highestPrediction = '';
-                let highestScore = 0;
-                let resultsHTML = '<h3>Analysis Results:</h3><ul>';
-                
-                for (let i = 0; i < predictions.length; i++) {
-                    const percentage = (predictions[i] * 100).toFixed(2);
-                    resultsHTML += `<li>${labels[i]}: ${percentage}%</li>`;
-                    
-                    if (predictions[i] > highestScore) {
-                        highestScore = predictions[i];
-                        highestPrediction = labels[i];
-                    }
-                }
-                
-                resultsHTML += '</ul>';
-                
-                // Add a conclusion
-                if (highestScore > 0.5) {
-                    resultsHTML += `<p><strong>Detected sound:</strong> ${highestPrediction} (confidence: ${(highestScore * 100).toFixed(2)}%)</p>`;
-                } else {
-                    resultsHTML += '<p><strong>No clear sound detected</strong> with high confidence.</p>';
-                }
-                
-                resultElement.innerHTML = resultsHTML;
-                
-                // Scroll to make sure the gauge is visible
-                document.querySelector('.predictions-container').scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-            
-            isAnalyzing = false;
-        }, 500);
-        
-    } catch (error) {
-        console.error('Error analyzing audio file:', error);
-        
-        // Reset UI
-        const analyzeButton = document.getElementById('analyze-button');
-        const progressContainer = document.getElementById('progress-container');
-        const resultElement = document.getElementById('file-analysis-result');
-        
-        if (analyzeButton) {
-            analyzeButton.disabled = false;
-            analyzeButton.textContent = 'Analyze Audio';
-        }
-        
-        if (progressContainer) {
-            progressContainer.style.display = 'none';
-        }
-        
-        if (resultElement) {
-            resultElement.style.display = 'block';
-            resultElement.innerHTML = `<p class='error'>Error analyzing audio: ${error.message}</p>`;
-        }
-        
-        isAnalyzing = false;
-    }
-}
-
-// Function to analyze audio buffer with the model
-async function analyzeAudioBuffer(audioBuffer) {
-    try {
-        // We need to extract features from the audio buffer
-        // For simplicity, let's create dummy predictions since
-        // full audio analysis would require complex feature extraction
-        
-        // In a real implementation, you would:
-        // 1. Extract MFCC or similar features from the audio
-        // 2. Format them to match what the model expects
-        // 3. Run them through the model
-        
-        // For our demo, we'll simulate this process
-        
-        // Get some basic audio properties
-        const duration = audioBuffer.duration;
-        const channels = audioBuffer.numberOfChannels;
-        const sampleRate = audioBuffer.sampleRate;
-        
-        // Calculate energy levels as a simple feature
-        let totalEnergy = 0;
-        const channelData = audioBuffer.getChannelData(0); // Use first channel
-        
-        // Calculate RMS energy
-        for (let i = 0; i < channelData.length; i++) {
-            totalEnergy += channelData[i] * channelData[i];
-        }
-        const rmsEnergy = Math.sqrt(totalEnergy / channelData.length);
-        
-        // For demo purposes, generate some predictions based on audio characteristics
-        // In a real scenario, you would actually run the features through the model
-        
-        // Create predictions array of appropriate size based on our labels
-        let predictions = new Array(labels.length).fill(0);
-        
-        if (labels.length < 2) {
-            // If we have fewer than 2 labels, use a simple random prediction
-            predictions[0] = 0.5 + (Math.random() * 0.3);
-            return predictions;
-        }
-        
-        // Simple heuristic for demo purposes based on loaded labels:
-        // First label is typically background noise
-        // Second label is typically the target sound (like FPV Drone)
-        
-        if (rmsEnergy > 0.1 && duration < 2) {
-            // High energy, short duration sound - likely to be target sound
-            predictions[1] = 0.7 + (Math.random() * 0.2); // Higher chance of drone/target
-            predictions[0] = 0.2 + (Math.random() * 0.1); // Lower chance of background
-            
-            // Fill in any remaining labels with low probabilities
-            let remainingSum = predictions[0] + predictions[1];
-            for (let i = 2; i < predictions.length; i++) {
-                const randomValue = 0.1 * Math.random();
-                predictions[i] = randomValue;
-                remainingSum += randomValue;
-            }
-            
-            // Normalize to ensure sum is approximately 1
-            for (let i = 0; i < predictions.length; i++) {
-                predictions[i] = predictions[i] / remainingSum;
-            }
-        } else {
-            // Likely to be background noise
-            predictions[0] = 0.7 + (Math.random() * 0.2); // Higher chance of background
-            predictions[1] = 0.2 + (Math.random() * 0.1); // Lower chance of target sound
-            
-            // Fill in any remaining labels with low probabilities
-            let remainingSum = predictions[0] + predictions[1];
-            for (let i = 2; i < predictions.length; i++) {
-                const randomValue = 0.1 * Math.random();
-                predictions[i] = randomValue;
-                remainingSum += randomValue;
-            }
-            
-            // Normalize to ensure sum is approximately 1
-            for (let i = 0; i < predictions.length; i++) {
-                predictions[i] = predictions[i] / remainingSum;
-            }
-        }
-        
-        return predictions;
-    } catch (error) {
-        console.error('Error in audio analysis:', error);
-        throw error;
-    }
-}
 
 // Alarm system variables
 let alarmActive = false;
 let alarmSnoozed = false;
 let alarmSnoozeTimeout = null;
+let alarmSound = null;
+let alarmVolume = 0.8; // Default volume (0.0 to 1.0)
+
+// Initialize alarm audio system
+function initAlarmAudio() {
+    // Get reference to audio element
+    alarmSound = document.getElementById('alarm-sound');
+    
+    if (!alarmSound) {
+        console.error('Alarm sound element not found in the document');
+        return false;
+    }
+    
+    // Set initial volume
+    alarmSound.volume = alarmVolume;
+    
+    // Preload the audio
+    alarmSound.load();
+    
+    // Handle audio loading errors
+    alarmSound.onerror = function(e) {
+        console.error('Error loading alarm sound:', e);
+    };
+    
+    // Log when audio is ready
+    alarmSound.oncanplaythrough = function() {
+        console.log('Alarm sound loaded and ready to play');
+    };
+    
+    return true;
+}
 
 // Function to trigger the alarm when a drone is detected
 function triggerAlarm(confidence) {
@@ -1032,18 +809,60 @@ function triggerAlarm(confidence) {
     const alarmPopup = document.getElementById('alarm-popup');
     if (alarmPopup) {
         alarmPopup.style.display = 'block';
+        // Add a short animation to make it more noticeable
+        alarmPopup.classList.add('pulse');
+        setTimeout(() => alarmPopup.classList.remove('pulse'), 1000);
     }
     
-    // Play the alarm sound
-    const alarmSound = document.getElementById('alarm-sound');
-    if (alarmSound) {
-        alarmSound.play().catch(e => console.error('Could not play alarm sound:', e));
-    }
+    // Play the alarm sound with robust error handling
+    playAlarmSound();
     
     // Add alarm active class to body for additional visual cues
     document.body.classList.add('alarm-active');
     
     console.log('ALARM TRIGGERED with confidence:', confidence);
+}
+
+// Function to play alarm sound with robust error handling
+function playAlarmSound() {
+    if (!alarmSound) {
+        alarmSound = document.getElementById('alarm-sound');
+        if (!alarmSound) {
+            console.error('Alarm sound element not found');
+            return;
+        }
+    }
+    
+    // Reset the sound in case it was playing
+    try {
+        alarmSound.pause();
+        alarmSound.currentTime = 0;
+        alarmSound.volume = alarmVolume;
+    } catch (e) {
+        console.warn('Error resetting alarm sound:', e);
+    }
+    
+    // Try to play the sound with promise-based error handling
+    const playPromise = alarmSound.play();
+    
+    // Modern browsers return a promise from play()
+    if (playPromise !== undefined) {
+        playPromise
+            .then(() => {
+                console.log('Alarm sound playing...');
+            })
+            .catch(error => {
+                console.error('Could not play alarm sound:', error);
+                // Try alternative playback method if standard method fails
+                setTimeout(() => {
+                    try {
+                        alarmSound.play();
+                    } catch (e) {
+                        console.error('Alternative playback also failed:', e);
+                    }
+                }, 100);
+            });
+    }
 }
 
 // Function to dismiss the alarm
@@ -1058,17 +877,29 @@ function dismissAlarm() {
         alarmPopup.style.display = 'none';
     }
     
-    // Stop the alarm sound
-    const alarmSound = document.getElementById('alarm-sound');
-    if (alarmSound) {
-        alarmSound.pause();
-        alarmSound.currentTime = 0;
-    }
+    // Stop the alarm sound with error handling
+    stopAlarmSound();
     
     // Remove alarm active class
     document.body.classList.remove('alarm-active');
     
     console.log('Alarm dismissed');
+}
+
+// Function to stop alarm sound
+function stopAlarmSound() {
+    if (!alarmSound) {
+        alarmSound = document.getElementById('alarm-sound');
+    }
+    
+    if (alarmSound) {
+        try {
+            alarmSound.pause();
+            alarmSound.currentTime = 0;
+        } catch (e) {
+            console.warn('Error stopping alarm sound:', e);
+        }
+    }
 }
 
 // Function to snooze the alarm for a specified number of minutes
