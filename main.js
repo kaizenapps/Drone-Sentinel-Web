@@ -758,8 +758,6 @@ function updateUI(prediction) {
 
 // Alarm system variables
 let alarmActive = false;
-let alarmSnoozed = false;
-let alarmSnoozeTimeout = null;
 let alarmSound = null;
 let alarmVolume = 0.8; // Default volume (0.0 to 1.0)
 
@@ -794,8 +792,8 @@ function initAlarmAudio() {
 
 // Function to trigger the alarm when a drone is detected
 function triggerAlarm(confidence) {
-    // Don't trigger if already active or snoozed
-    if (alarmActive || alarmSnoozed) return;
+    // Don't trigger if already active
+    if (alarmActive) return;
     
     alarmActive = true;
     
@@ -902,43 +900,7 @@ function stopAlarmSound() {
     }
 }
 
-// Function to snooze the alarm for a specified number of minutes
-function snoozeAlarm(minutes) {
-    if (!alarmActive) return;
-    
-    alarmActive = false;
-    alarmSnoozed = true;
-    
-    // Hide the alarm popup
-    const alarmPopup = document.getElementById('alarm-popup');
-    if (alarmPopup) {
-        alarmPopup.style.display = 'none';
-    }
-    
-    // Stop the alarm sound
-    const alarmSound = document.getElementById('alarm-sound');
-    if (alarmSound) {
-        alarmSound.pause();
-        alarmSound.currentTime = 0;
-    }
-    
-    // Remove alarm active class
-    document.body.classList.remove('alarm-active');
-    
-    // Clear any existing snooze timeout
-    if (alarmSnoozeTimeout) {
-        clearTimeout(alarmSnoozeTimeout);
-    }
-    
-    // Set a timeout to re-enable the alarm after the snooze period
-    const snoozeMs = minutes * 60 * 1000;
-    alarmSnoozeTimeout = setTimeout(() => {
-        alarmSnoozed = false;
-        console.log('Alarm snooze period ended');
-    }, snoozeMs);
-    
-    console.log(`Alarm snoozed for ${minutes} minutes`);
-}
+// Snooze functionality has been removed
 
 // Initialize the app when the page loads
 async function initApp() {
@@ -948,7 +910,6 @@ async function initApp() {
     
     // Add global functions for the alarm system
     window.dismissAlarm = dismissAlarm;
-    window.snoozeAlarm = snoozeAlarm;
     
     // Initialize the spectrogram first
     const spectrogramInitialized = initSpectrogram();
