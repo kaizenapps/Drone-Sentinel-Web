@@ -553,21 +553,40 @@
         <p><span class="material-icons">radar</span>Real-time sound detection for security monitoring</p>
     </header>
 
+    <!-- Listen button at the top -->
+    <div style="text-align: center; margin: 20px auto; max-width: 500px;">
+        <button id="start-button" disabled style="width: 100%; padding: 15px; margin: 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1.5px; background-color: #333; border-radius: 8px; transition: all 0.3s ease; font-family: 'Exo', sans-serif; position: relative; overflow: hidden; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); border: none; border-left: 4px solid #ff3d3d;">
+            <span style="position: relative; z-index: 2; display: flex; align-items: center; justify-content: center;">
+                <span class="material-icons" style="font-size: 24px; margin-right: 10px;">settings_voice</span>
+                Initializing...
+            </span>
+            <span style="position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); transition: all 0.5s ease;"></span>
+        </button>
+    </div>
+
     <div class="info-section" style="margin-bottom: 20px; background-color: #1e1e1e; border-radius: 8px; padding: 15px; border-left: 4px solid #ff3d3d;">
         <h2 style="margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px;"><span class="material-icons" style="color: #ff3d3d;">info</span>About Drone Sentinel</h2>
         <p>Drone Sentinel is an AI-powered sound detection system that listens for specific sounds in the environment and provides real-time alerts.</p>
         <p>The system uses TensorFlow.js and a pre-trained model to detect drone sounds in your environment.</p>
         
+        <!-- Foldable How to Use card -->
         <div class="usage-instructions" style="background-color: #2c2c2c; padding: 15px; border-radius: 6px; margin-top: 15px;">
-            <h3 style="margin-top: 0;"><span class="material-icons" style="color: #ff3d3d;">help_outline</span>How to Use</h3>
-            <ol style="padding-left: 25px;">
-                <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">mic</span>Allow microphone access when prompted by your browser</li>
-                <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">hourglass_top</span>Wait for the model to load</li>
-                <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">play_circle</span>Click the "Start Listening" button to begin sound detection</li>
-                <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">notifications_active</span>The system will display alerts when it detects FPV Drone sounds</li>
-                <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">pause_circle</span>Click "Stop Listening" to pause detection</li>
-            </ol>
-            <p style="margin-bottom: 0;"><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">warning</span><strong>Note:</strong> This system requires microphone access to function. If you deny access, you will need to enable it in your browser settings and reload the page.</p>
+            <div class="card-header" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="toggleHowToUse()">
+                <h3 style="margin: 0;"><span class="material-icons" style="color: #ff3d3d;">help_outline</span>How to Use</h3>
+                <span class="material-icons" id="how-to-use-toggle" style="color: #ff3d3d;">expand_more</span>
+            </div>
+            <div id="how-to-use-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
+                <div style="padding-top: 15px;">
+                    <ol style="padding-left: 25px;">
+                        <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">mic</span>Allow microphone access when prompted by your browser</li>
+                        <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">hourglass_top</span>Wait for the model to load</li>
+                        <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">play_circle</span>Click the "Start Listening" button to begin sound detection</li>
+                        <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">notifications_active</span>The system will display alerts when it detects FPV Drone sounds</li>
+                        <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">pause_circle</span>Click "Stop Listening" to pause detection</li>
+                    </ol>
+                    <p style="margin-bottom: 0;"><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">warning</span><strong>Note:</strong> This system requires microphone access to function. If you deny access, you will need to enable it in your browser settings and reload the page.</p>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -617,46 +636,22 @@
         
         <div id="alert" style="background-color: #2c2c2c;">Initializing sound detection...</div>
         
-        <!-- Live microphone controls -->
-        <div class="control-panel" style="display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #1e1e1e; border-radius: 8px; margin: 30px auto; width: 95%; max-width: 500px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4); border-left: 4px solid #ff3d3d; position: relative; overflow: hidden;">
-            <!-- Decorative corner element -->
-            <div style="position: absolute; top: -25px; right: -25px; width: 100px; height: 100px; background: #ff3d3d; transform: rotate(45deg); opacity: 0.1;"></div>
-            
-            <div style="width: 100%; display: flex; justify-content: center; align-items: center; margin: 20px 0;">
-                <div style="background-color: #ff3d3d; width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-right: 15px;">
-                    <span class="material-icons" style="color: white; font-size: 24px;">hearing</span>
-                </div>
-                <h3 style="margin: 0; text-align: center; font-family: 'Exo', sans-serif; font-size: 24px; letter-spacing: 1px;">LIVE DETECTION</h3>
+        <!-- Sensitivity slider integrated inline with content -->
+        <div style="margin: 20px 0; padding: 15px; background-color: #2c2c2c; border-radius: 8px; border-left: 3px solid #ff3d3d;">
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <span class="material-icons" style="color: #ff3d3d; margin-right: 8px;">tune</span>
+                <h4 style="margin: 0; color: #e0e0e0; font-size: 16px;">Detection Sensitivity:</h4>
+                <span id="threshold-value" style="margin-left: auto; background-color: #1e1e1e; padding: 4px 12px; border-radius: 20px; font-family: 'Exo', sans-serif; color: #ff3d3d; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">60%</span>
             </div>
-            
-            <!-- Confidence Threshold Slider -->
-            <div style="width: 100%; margin: 0 0 20px 0; background-color: #2c2c2c; padding: 15px; border-radius: 8px; box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);">
-                <h4 style="margin-top: 0; margin-bottom: 15px; color: #e0e0e0; font-size: 16px; display: flex; align-items: center;">
-                    <span class="material-icons" style="color: #ff3d3d; margin-right: 8px;">tune</span>
-                    Detection Sensitivity: <span id="threshold-value" style="margin-left: auto; background-color: #1e1e1e; padding: 4px 12px; border-radius: 20px; font-family: 'Exo', sans-serif; color: #ff3d3d; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">60%</span>
-                </h4>
-                <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                    <span style="color: #999; margin-right: 10px; font-size: 12px; display: flex; align-items: center;"><span class="material-icons" style="font-size: 16px; margin-right: 4px;">visibility</span>Low</span>
-                    <input type="range" id="confidence-threshold" min="10" max="90" value="60" step="5" style="flex-grow: 1; height: 8px; -webkit-appearance: none; appearance: none; background: linear-gradient(to right, #ff3d3d, #ff3d3d 60%, #444 60%, #444); border-radius: 4px; outline: none; cursor: pointer;">
-                    <span style="color: #999; margin-left: 10px; font-size: 12px; display: flex; align-items: center;">High<span class="material-icons" style="font-size: 16px; margin-left: 4px;">visibility_off</span></span>
-                </div>
-                <div style="display: flex; justify-content: space-between; width: 100%; margin-top: 5px;">
-                    <span style="color: #666; font-size: 10px;">More Detections</span>
-                    <span style="color: #666; font-size: 10px;">Higher Accuracy</span>
-                </div>
-                <p style="margin: 15px 0 0; font-size: 12px; color: #999; background-color: rgba(255, 61, 61, 0.1); padding: 8px; border-radius: 4px; border-left: 2px solid #ff3d3d;">
-                    <span class="material-icons" style="font-size: 14px; vertical-align: middle; color: #ff3d3d; margin-right: 5px;">tips_and_updates</span>
-                    Your sensitivity setting is saved in your browser for future visits.
-                </p>
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <span style="color: #999; margin-right: 10px; font-size: 12px; display: flex; align-items: center;"><span class="material-icons" style="font-size: 16px; margin-right: 4px;">visibility</span>Low</span>
+                <input type="range" id="confidence-threshold" min="10" max="90" value="60" step="5" style="flex-grow: 1; height: 8px; -webkit-appearance: none; appearance: none; background: linear-gradient(to right, #ff3d3d, #ff3d3d 60%, #444 60%, #444); border-radius: 4px; outline: none; cursor: pointer;">
+                <span style="color: #999; margin-left: 10px; font-size: 12px; display: flex; align-items: center;">High<span class="material-icons" style="font-size: 16px; margin-left: 4px;">visibility_off</span></span>
             </div>
-            
-            <button id="start-button" disabled style="width: 100%; padding: 15px; margin: 0 0 20px 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1.5px; background-color: #333; border-radius: 8px; transition: all 0.3s ease; font-family: 'Exo', sans-serif; position: relative; overflow: hidden;">
-                <span style="position: relative; z-index: 2; display: flex; align-items: center; justify-content: center;">
-                    <span class="material-icons" style="font-size: 24px; margin-right: 10px;">settings_voice</span>
-                    Initializing...
-                </span>
-                <span style="position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); transition: all 0.5s ease;"></span>
-            </button>
+            <div style="display: flex; justify-content: space-between; width: 100%;">
+                <span style="color: #666; font-size: 10px;">More Detections</span>
+                <span style="color: #666; font-size: 10px;">Higher Accuracy</span>
+            </div>
         </div>
         
         <!-- Predictions meter (like car accelerometer) -->
@@ -683,25 +678,16 @@
             </div>
         </div>
         
-        <!-- File upload section moved to the bottom -->
-        <div class="file-upload-section" style="margin-top: 30px; border-top: 1px solid #333; padding-top: 20px;">
-            <h3><span class="material-icons">upload_file</span>Test with Audio File</h3>
-            <p><span class="material-icons">audio_file</span>Upload an audio file (.wav, .mp3) to test the model:</p>
-            <div class="file-upload-container">
-                <input type="file" id="audio-upload" accept="audio/*" disabled>
-                <button id="analyze-button" disabled><span class="material-icons">analytics</span>Analyze Audio</button>
-            </div>
-            <div class="file-info" id="file-info" style="color: #b0b0b0;">No file selected</div>
-            <div class="progress-container" id="progress-container" style="display: none;">
-                <div class="progress-bar" id="progress-bar"></div>
-            </div>
-            <div id="file-analysis-result"></div>
-        </div>
+
     </div>
     
     <!-- Footer -->
     <footer style="margin-top: 40px; padding: 20px; text-align: center; border-top: 1px solid #333; background-color: #121212;">
-        <div style="display: flex; justify-content: center; align-items: center;">
+        <div style="display: flex; justify-content: center; align-items: center; position: relative;">
+            <!-- Hidden developer test mode button -->
+            <div style="position: absolute; right: 0; top: 0;">
+                <button id="open-test-page" title="Developer Test Mode" style="background: none; border: none; color: #444; font-size: 16px; cursor: pointer; padding: 5px;" onclick="openTestPage()">⚙️</button>
+            </div>
             <span style="color: #777; font-size: 14px; font-family: 'Roboto', sans-serif;">Powered by </span>
             <a href="https://kaizenapps.com" target="_blank" style="color: #ff3d3d; text-decoration: none; margin-left: 5px; font-weight: bold; font-family: 'Exo', sans-serif; font-size: 16px; transition: all 0.3s ease;">KaizenApps.com</a>
         </div>
@@ -717,6 +703,14 @@
             <span class="material-icons" style="font-size: 12px; vertical-align: middle; margin-right: 3px;">tag</span>
             <span id="app-version">Loading version...</span>
         </div>
+        
+        <!-- Test Page Link Button -->
+        <div style="margin-top: 15px;">
+            <a href="/test.html" class="test-link" style="display: inline-block; font-size: 12px; color: #555; text-decoration: none; background-color: #1e1e1e; padding: 6px 12px; border-radius: 4px; border: 1px solid #333; transition: all 0.3s ease;">
+                <span class="material-icons" style="font-size: 14px; vertical-align: middle; margin-right: 4px;">bug_report</span>
+                Test Mode
+            </a>
+        </div>
     </footer>
     
     <!-- Alarm sound effect -->
@@ -725,9 +719,38 @@
         Your browser does not support the audio element.
     </audio>
     
-    <!-- Update year automatically -->
+    <!-- Update year automatically and add How to Use toggle functionality -->
     <script>
         document.getElementById('current-year').textContent = new Date().getFullYear();
+        
+        // Function to toggle the How to Use section visibility
+        function toggleHowToUse() {
+            const content = document.getElementById('how-to-use-content');
+            const toggle = document.getElementById('how-to-use-toggle');
+            
+            if (content.style.maxHeight === '0px' || content.style.maxHeight === '') {
+                content.style.maxHeight = content.scrollHeight + 'px';
+                toggle.textContent = 'expand_less';
+            } else {
+                content.style.maxHeight = '0px';
+                toggle.textContent = 'expand_more';
+            }
+        }
+        
+        // Function to open the test page
+        function openTestPage() {
+            window.location.href = '/test.html';
+        }
+        
+        // Add load event to expand the How to Use section by default once
+        window.addEventListener('load', function() {
+            // Expand the How to Use section after a short delay
+            setTimeout(function() {
+                const content = document.getElementById('how-to-use-content');
+                content.style.maxHeight = content.scrollHeight + 'px';
+                document.getElementById('how-to-use-toggle').textContent = 'expand_less';
+            }, 500);
+        });
     </script>
     
     <!-- Add alarm-related animations -->

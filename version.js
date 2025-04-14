@@ -1,8 +1,8 @@
 // Version configuration for base version
 const APP_VERSION = {
     major: 1,
-    minor: 0,
-    patch: 0,
+    minor: 1,
+    patch: 1,
     buildDate: "2025-04-12"
 };
 

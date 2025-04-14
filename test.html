@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drone Sentinel - Model Test Environment</title>
+    
+    <!-- Favicon references -->
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+    
+    <!-- TensorFlow.js libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.4.0/dist/speech-commands.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        
+        .file-btn {
+            padding: 10px 15px; 
+            margin: 0; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+            font-weight: bold; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3); 
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .file-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+        }
+        
+        .file-btn:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+        }
+        
+        .file-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            transform: scale(0.5);
+            pointer-events: none;
+        }
+        
+        .file-btn:hover::after {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .model-btn { background-color: #4a6baf; }
+        .model-btn:hover { background-color: #5a7bbf; }
+        
+        .weights-btn { background-color: #508a50; }
+        .weights-btn:hover { background-color: #609a60; }
+        
+        .metadata-btn { background-color: #b46a55; }
+        .metadata-btn:hover { background-color: #c47a65; }
+        
+        h1, h2, h3 {
+            color: #ff3d3d;
+        }
+        
+        .container {
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #1e1e1e;
+        }
+        
+        .btn {
+            background-color: #2c2c2c;
+            color: #e0e0e0;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .btn:hover {
+            background-color: #3c3c3c;
+        }
+        
+        .btn-primary {
+            background-color: #ff3d3d;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #e03030;
+        }
+        
+        input[type="text"], input[type="url"] {
+            background-color: #2c2c2c;
+            border: 1px solid #444;
+            color: #e0e0e0;
+            padding: 8px;
+            border-radius: 4px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .alert {
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        
+        .alert-info {
+            background-color: rgba(0, 123, 255, 0.1);
+            border-left: 4px solid #0d6efd;
+        }
+        
+        .alert-warning {
+            background-color: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid #ffc107;
+        }
+        
+        .alert-danger {
+            background-color: rgba(220, 53, 69, 0.1);
+            border-left: 4px solid #dc3545;
+        }
+        
+        .alert-success {
+            background-color: rgba(40, 167, 69, 0.1);
+            border-left: 4px solid #28a745;
+        }
+        
+        .model-info {
+            background-color: #262626;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .status-success {
+            background-color: #28a745;
+        }
+        
+        .status-warning {
+            background-color: #ffc107;
+        }
+        
+        .status-error {
+            background-color: #dc3545;
+        }
+        
+        .status-inactive {
+            background-color: #6c757d;
+        }
+        
+        /* Testing console styles */
+        .console {
+            background-color: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: monospace;
+            height: 200px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+        
+        .console-entry {
+            margin-bottom: 5px;
+            border-bottom: 1px solid #222;
+            padding-bottom: 5px;
+        }
+        
+        .console-time {
+            color: #888;
+            margin-right: 10px;
+        }
+        
+        .console-info {
+            color: #3498db;
+        }
+        
+        .console-warning {
+            color: #f39c12;
+        }
+        
+        .console-error {
+            color: #e74c3c;
+        }
+        
+        .console-success {
+            color: #2ecc71;
+        }
+        
+        .close-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ff3d3d;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        /* Predictions styling */
+        .predictions-container {
+            margin-top: 20px;
+            background-color: #262626;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        
+        .prediction-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .prediction-label {
+            width: 150px;
+            font-weight: bold;
+        }
+        
+        .prediction-bar-container {
+            flex-grow: 1;
+            height: 20px;
+            background-color: #444;
+            border-radius: 10px;
+            margin: 0 10px;
+            overflow: hidden;
+        }
+        
+        .prediction-bar {
+            height: 100%;
+            background-color: #ff3d3d;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+        
+        .prediction-value {
+            width: 70px;
+            text-align: right;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <button class="close-button" onclick="window.close()">✕</button>
+    
+    <h1>Drone Sentinel - Model Test Environment</h1>
+    
+    <div class="alert alert-info">
+        This is a testing environment for custom model loading. Changes made here are session-based and will not affect the main application.
+    </div>
+    
+    <div class="container">
+        <h2>Custom Model Configuration</h2>
+        
+        <div class="form-group">
+            <label for="model-url">Model URL:</label>
+            <input type="url" id="model-url" placeholder="https://example.com/path/to/model/model.json">
+            <p>Enter the URL to a TensorFlow.js compatible sound classification model in the JSON format</p>
+        </div>
+        
+        <div class="form-group">
+            <label for="metadata-url">Metadata URL:</label>
+            <input type="url" id="metadata-url" placeholder="https://example.com/path/to/model/metadata.json">
+            <p>Enter the URL to the metadata.json file for the model</p>
+        </div>
+        
+        <div class="form-group">
+            <label>Local Files:</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+                <div class="file-input-container" style="position: relative; overflow: hidden; display: inline-block;">
+                    <button class="btn file-btn model-btn" type="button">
+                        <span style="display: inline-block; margin-right: 5px;">📄</span> Select model.json
+                    </button>
+                    <input type="file" id="model-file" accept=".json" style="position: absolute; opacity: 0; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer;">
+                </div>
+                <div class="file-input-container" style="position: relative; overflow: hidden; display: inline-block;">
+                    <button class="btn file-btn weights-btn" type="button">
+                        <span style="display: inline-block; margin-right: 5px;">📦</span> Select weights.bin file(s)
+                    </button>
+                    <input type="file" id="weights-file" accept=".bin" multiple style="position: absolute; opacity: 0; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer;">
+                </div>
+                <div class="file-input-container" style="position: relative; overflow: hidden; display: inline-block;">
+                    <button class="btn file-btn metadata-btn" type="button">
+                        <span style="display: inline-block; margin-right: 5px;">🔍</span> Select metadata.json
+                    </button>
+                    <input type="file" id="metadata-file" accept=".json" style="position: absolute; opacity: 0; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer;">
+                </div>
+            </div>
+            <!-- File names display -->
+            <div id="file-names" style="font-size: 12px; color: #999; margin-top: 5px;">
+                <div id="model-file-name">No model file selected</div>
+                <div id="weights-file-name">No weights files selected</div>
+                <div id="metadata-file-name">No metadata file selected</div>
+            </div>
+        </div>
+        
+        
+        <div class="form-group">
+            <button id="load-model-btn" class="btn btn-primary">Load Model</button>
+            <button id="reset-model-btn" class="btn">Reset to Default</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>Model Information</h2>
+        <div id="model-info" class="model-info">
+            <p><span class="status-indicator status-inactive"></span> No custom model loaded</p>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>Testing Console</h2>
+        <button id="start-test-btn" class="btn btn-primary" disabled>Start Listening</button>
+        <button id="stop-test-btn" class="btn" disabled>Stop Listening</button>
+        
+        <div class="predictions-container" id="test-predictions">
+            <!-- Will be populated with prediction results -->
+        </div>
+        
+        <div id="test-console" class="console">
+            <!-- Console logs will appear here -->
+        </div>
+    </div>
+    
+    <script>
+        // Model variables
+        let testModel = null;
+        let isListening = false;
+        let labels = [];
+        
+        // Console functions
+        function logToConsole(message, type = 'info') {
+            const console = document.getElementById('test-console');
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            
+            const entry = document.createElement('div');
+            entry.className = 'console-entry';
+            entry.innerHTML = `<span class="console-time">[${timeString}]</span><span class="console-${type}">${message}</span>`;
+            
+            console.appendChild(entry);
+            console.scrollTop = console.scrollHeight;
+        }
+        
+        // Function to load model from URL
+        async function loadModelFromURL(modelUrl, metadataUrl) {
+            try {
+                logToConsole('Starting model load from URL...', 'info');
+                
+                // Create recognizer
+                const recognizer = speechCommands.create(
+                    'BROWSER_FFT',
+                    undefined,
+                    modelUrl,
+                    metadataUrl
+                );
+                
+                logToConsole('Recognizer created, loading model...', 'info');
+                
+                // Load the model
+                await recognizer.ensureModelLoaded();
+                
+                logToConsole('Model loaded successfully!', 'success');
+                
+                // Get labels
+                labels = recognizer.wordLabels();
+                logToConsole(`Found ${labels.length} labels: ${labels.join(', ')}`, 'info');
+                
+                // Update the model information UI
+                updateModelInfo(true, `URL Model loaded with ${labels.length} labels`);
+                
+                // Enable testing buttons
+                document.getElementById('start-test-btn').disabled = false;
+                
+                // Store model in session storage
+                sessionStorage.setItem('customModelUrl', modelUrl);
+                sessionStorage.setItem('customMetadataUrl', metadataUrl);
+                
+                return recognizer;
+            } catch (error) {
+                logToConsole(`Error loading model: ${error.message}`, 'error');
+                updateModelInfo(false, 'Error loading model');
+                return null;
+            }
+        }
+        
+        // Function to handle local files
+        async function loadModelFromFiles(modelFile, weightsFiles, metadataFile) {
+            try {
+                logToConsole('Loading model from local files...', 'info');
+                
+                // Read the JSON files
+                const modelJSON = await readJSONFile(modelFile);
+                const metadata = await readJSONFile(metadataFile);
+                
+                if (!modelJSON || !metadata) {
+                    throw new Error('Failed to read model or metadata file');
+                }
+                
+                logToConsole('Successfully read model and metadata files', 'info');
+                logToConsole('Creating recognizer with local model data...', 'info');
+                
+                // Parse the labels from the metadata
+                if (metadata.wordLabels && Array.isArray(metadata.wordLabels)) {
+                    labels = metadata.wordLabels;
+                    logToConsole(`Found ${labels.length} labels in metadata`, 'info');
+                } else {
+                    throw new Error('No word labels found in metadata');
+                }
+                
+                // For local files, we'll use a different approach
+                // We'll display the model information but warn that actual
+                // loading requires a server setup for proper handling
+                
+                updateModelInfo(true, `Local model parsed successfully with ${labels.length} labels`, true);
+                logToConsole('Browser security prevents loading models directly from file uploads.', 'warning');
+                logToConsole('The model information is displayed, but inference is disabled.', 'warning');
+                logToConsole('For full functionality with CI/CD, consider hosting model files in a CDN or public repository.', 'info');
+                
+                // Simulate a recognizer for display purposes
+                const simulatedRecognizer = {
+                    wordLabels: () => labels,
+                    // Add stub methods that will warn if called
+                    listen: () => {
+                        logToConsole('Cannot perform inference with local files in this demo', 'error');
+                        return null;
+                    },
+                    stopListening: () => {}
+                };
+                
+                return simulatedRecognizer;
+            } catch (error) {
+                logToConsole(`Error loading local model: ${error.message}`, 'error');
+                updateModelInfo(false, 'Error loading local model');
+                return null;
+            }
+        }
+        
+        // Helper function to read JSON files
+        function readJSONFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const json = JSON.parse(event.target.result);
+                        resolve(json);
+                    } catch (e) {
+                        reject(new Error(`Failed to parse JSON: ${e.message}`));
+                    }
+                };
+                reader.onerror = () => reject(new Error('Failed to read file'));
+                reader.readAsText(file);
+            });
+        }
+        
+        // Function to update model info UI
+        function updateModelInfo(success, message, isLocalFile = false) {
+            const modelInfo = document.getElementById('model-info');
+            
+            if (success) {
+                let statusClass = isLocalFile ? 'status-warning' : 'status-success';
+                let additionalInfo = isLocalFile ? 
+                    '<p style="color: #ffc107;"><strong>Note:</strong> Browser security prevents direct file usage. ' +
+                    'For persistent models with CI/CD, consider hosting your model files in a CDN or public repository ' +
+                    'and use the URL option above.</p>' : '';
+                
+                modelInfo.innerHTML = `
+                    <p><span class="status-indicator ${statusClass}"></span> ${message}</p>
+                    <p>Labels: ${labels.join(', ')}</p>
+                    ${additionalInfo}
+                `;
+            } else {
+                modelInfo.innerHTML = `
+                    <p><span class="status-indicator status-error"></span> ${message}</p>
+                `;
+            }
+        }
+        
+        // Function to start listening
+        async function startListening() {
+            if (!testModel || isListening) return;
+            
+            try {
+                logToConsole('Starting to listen...', 'info');
+                
+                // Start the model listening
+                testModel.listen(
+                    result => {
+                        // Handle predictions
+                        displayPredictions(result.scores);
+                    },
+                    {
+                        includeSpectrogram: true,
+                        probabilityThreshold: 0.75,
+                        invokeCallbackOnNoiseAndUnknown: true,
+                        overlapFactor: 0.50
+                    }
+                );
+                
+                isListening = true;
+                document.getElementById('start-test-btn').disabled = true;
+                document.getElementById('stop-test-btn').disabled = false;
+                
+                logToConsole('Listening for sounds...', 'success');
+            } catch (error) {
+                logToConsole(`Error starting listening: ${error.message}`, 'error');
+            }
+        }
+        
+        // Function to stop listening
+        function stopListening() {
+            if (!testModel || !isListening) return;
+            
+            try {
+                testModel.stopListening();
+                isListening = false;
+                document.getElementById('start-test-btn').disabled = false;
+                document.getElementById('stop-test-btn').disabled = true;
+                
+                logToConsole('Stopped listening', 'info');
+            } catch (error) {
+                logToConsole(`Error stopping listening: ${error.message}`, 'error');
+            }
+        }
+        
+        // Function to display predictions
+        function displayPredictions(scores) {
+            const container = document.getElementById('test-predictions');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < labels.length; i++) {
+                const percentage = (scores[i] * 100).toFixed(1);
+                
+                const item = document.createElement('div');
+                item.className = 'prediction-item';
+                
+                const label = document.createElement('div');
+                label.className = 'prediction-label';
+                label.textContent = labels[i];
+                
+                const barContainer = document.createElement('div');
+                barContainer.className = 'prediction-bar-container';
+                
+                const bar = document.createElement('div');
+                bar.className = 'prediction-bar';
+                bar.style.width = `${percentage}%`;
+                
+                const value = document.createElement('div');
+                value.className = 'prediction-value';
+                value.textContent = `${percentage}%`;
+                
+                barContainer.appendChild(bar);
+                item.appendChild(label);
+                item.appendChild(barContainer);
+                item.appendChild(value);
+                
+                container.appendChild(item);
+            }
+        }
+        
+        // Function to reset to default model
+        function resetModel() {
+            // Clear session storage
+            sessionStorage.removeItem('customModelUrl');
+            sessionStorage.removeItem('customMetadataUrl');
+            
+            // Reset the UI
+            document.getElementById('model-url').value = '';
+            document.getElementById('metadata-url').value = '';
+            document.getElementById('model-file').value = '';
+            document.getElementById('weights-file').value = '';
+            document.getElementById('metadata-file').value = '';
+            
+            // Stop listening if needed
+            if (isListening && testModel) {
+                stopListening();
+            }
+            
+            // Reset model
+            testModel = null;
+            
+            // Update UI
+            updateModelInfo(false, 'Model reset. No custom model loaded');
+            document.getElementById('start-test-btn').disabled = true;
+            document.getElementById('stop-test-btn').disabled = true;
+            document.getElementById('test-predictions').innerHTML = '';
+            
+            logToConsole('Model reset to default', 'info');
+        }
+        
+        // File selection event listeners
+        document.getElementById('model-file').addEventListener('change', (event) => {
+            const fileInput = event.target;
+            const fileName = fileInput.files.length > 0 ? fileInput.files[0].name : 'No model file selected';
+            document.getElementById('model-file-name').textContent = fileName;
+        });
+        
+        document.getElementById('weights-file').addEventListener('change', (event) => {
+            const fileInput = event.target;
+            if (fileInput.files.length > 0) {
+                const fileNames = Array.from(fileInput.files).map(file => file.name).join(', ');
+                document.getElementById('weights-file-name').textContent = `Selected ${fileInput.files.length} files: ${fileNames}`;
+            } else {
+                document.getElementById('weights-file-name').textContent = 'No weights files selected';
+            }
+        });
+        
+        document.getElementById('metadata-file').addEventListener('change', (event) => {
+            const fileInput = event.target;
+            const fileName = fileInput.files.length > 0 ? fileInput.files[0].name : 'No metadata file selected';
+            document.getElementById('metadata-file-name').textContent = fileName;
+        });
+
+        // Load model button event listener
+        document.getElementById('load-model-btn').addEventListener('click', async () => {
+            // Stop listening if already active
+            if (isListening && testModel) {
+                stopListening();
+            }
+            
+            // Check if we have URL input
+            const modelUrl = document.getElementById('model-url').value;
+            const metadataUrl = document.getElementById('metadata-url').value;
+            
+            if (modelUrl && metadataUrl) {
+                // Load from URLs
+                testModel = await loadModelFromURL(modelUrl, metadataUrl);
+                return;
+            }
+            
+            // Check if we have file input
+            const modelFile = document.getElementById('model-file').files[0];
+            const weightsFiles = document.getElementById('weights-file').files;
+            const metadataFile = document.getElementById('metadata-file').files[0];
+            
+            if (modelFile && metadataFile) {
+                // Load from files
+                testModel = await loadModelFromFiles(modelFile, weightsFiles, metadataFile);
+                return;
+            }
+            
+            // If we get here, we don't have enough input
+            logToConsole('Please provide either URLs or files for both model and metadata', 'warning');
+        });
+        
+        document.getElementById('reset-model-btn').addEventListener('click', resetModel);
+        document.getElementById('start-test-btn').addEventListener('click', startListening);
+        document.getElementById('stop-test-btn').addEventListener('click', stopListening);
+        
+        // Check for previously stored model
+        window.addEventListener('DOMContentLoaded', async () => {
+            const storedModelUrl = sessionStorage.getItem('customModelUrl');
+            const storedMetadataUrl = sessionStorage.getItem('customMetadataUrl');
+            
+            if (storedModelUrl && storedMetadataUrl) {
+                logToConsole('Found previously loaded model in session storage', 'info');
+                document.getElementById('model-url').value = storedModelUrl;
+                document.getElementById('metadata-url').value = storedMetadataUrl;
+                
+                // Load the model
+                testModel = await loadModelFromURL(storedModelUrl, storedMetadataUrl);
+            } else {
+                logToConsole('No previous model found in session storage', 'info');
+                updateModelInfo(false, 'No custom model loaded');
+            }
+        });
+    </script>
+</body>
+</html>

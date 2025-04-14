@@ -911,6 +911,11 @@ async function initApp() {
     // Add global functions for the alarm system
     window.dismissAlarm = dismissAlarm;
     
+    // Add function to open test page
+    window.openTestPage = function() {
+        window.open('test.html', 'DroneTestWindow', 'width=800,height=800,resizable=yes,scrollbars=yes');
+    };
+    
     // Initialize the spectrogram first
     const spectrogramInitialized = initSpectrogram();
     console.log('Spectrogram initialized:', spectrogramInitialized);
