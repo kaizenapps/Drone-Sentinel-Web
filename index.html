@@ -553,38 +553,124 @@
         <p><span class="material-icons">radar</span>Real-time sound detection for security monitoring</p>
     </header>
 
-    <!-- Listen button at the top -->
-    <div style="text-align: center; margin: 20px auto; max-width: 500px;">
-        <button id="start-button" disabled style="width: 100%; padding: 15px; margin: 0; font-size: 18px; text-transform: uppercase; letter-spacing: 1.5px; background-color: #333; border-radius: 8px; transition: all 0.3s ease; font-family: 'Exo', sans-serif; position: relative; overflow: hidden; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); border: none; border-left: 4px solid #ff3d3d;">
-            <span style="position: relative; z-index: 2; display: flex; align-items: center; justify-content: center;">
-                <span class="material-icons" style="font-size: 24px; margin-right: 10px;">settings_voice</span>
-                Initializing...
-            </span>
-            <span style="position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent); transition: all 0.5s ease;"></span>
+    <!-- Big microphone button at the top -->
+    <div style="text-align: center; margin: 25px auto;">
+        <button id="start-button" disabled style="width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #333 0%, #1a1a1a 100%); box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), 0 0 0 8px rgba(128, 128, 128, 0.1); border: none; position: relative; cursor: pointer; transition: all 0.3s ease; transform: translateY(0); overflow: visible;">
+            <!-- Inner circle with microphone icon -->
+            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90px; height: 90px; background: linear-gradient(135deg, #333 0%, #1a1a1a 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.5);">
+                <span class="material-icons mic-icon" style="font-size: 50px; color: #bbbbbb; text-shadow: 0 0 10px rgba(187, 187, 187, 0.5); transition: all 0.3s ease;">mic</span>
+            </div>
+            
+            <!-- Status icon below button -->
+            <div style="position: absolute; top: 130px; left: 50%; transform: translateX(-50%); white-space: nowrap;">
+                <span class="material-icons status-icon" style="font-size: 24px; color: #bbbbbb; transition: all 0.3s ease;">hourglass_top</span>
+            </div>
+            
+            <!-- Pulse effect around button -->
+            <div class="pulse-effect" style="position: absolute; top: -8px; left: -8px; right: -8px; bottom: -8px; border-radius: 50%; opacity: 0;"></div>
         </button>
     </div>
-
-    <div class="info-section" style="margin-bottom: 20px; background-color: #1e1e1e; border-radius: 8px; padding: 15px; border-left: 4px solid #ff3d3d;">
-        <h2 style="margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 10px;"><span class="material-icons" style="color: #ff3d3d;">info</span>About Drone Sentinel</h2>
-        <p>Drone Sentinel is an AI-powered sound detection system that listens for specific sounds in the environment and provides real-time alerts.</p>
-        <p>The system uses TensorFlow.js and a pre-trained model to detect drone sounds in your environment.</p>
+    
+    <!-- Pulse animation style for the mic button -->
+    <style>
+        /* Pulse animations for different states */
+        @keyframes pulse-active {
+            0% { box-shadow: 0 0 0 0 rgba(255, 61, 61, 0.4); opacity: 1; }
+            70% { box-shadow: 0 0 0 15px rgba(255, 61, 61, 0); opacity: 0; }
+            100% { box-shadow: 0 0 0 0 rgba(255, 61, 61, 0); opacity: 0; }
+        }
         
-        <!-- Foldable How to Use card -->
-        <div class="usage-instructions" style="background-color: #2c2c2c; padding: 15px; border-radius: 6px; margin-top: 15px;">
-            <div class="card-header" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="toggleHowToUse()">
-                <h3 style="margin: 0;"><span class="material-icons" style="color: #ff3d3d;">help_outline</span>How to Use</h3>
-                <span class="material-icons" id="how-to-use-toggle" style="color: #ff3d3d;">expand_more</span>
-            </div>
-            <div id="how-to-use-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
-                <div style="padding-top: 15px;">
-                    <ol style="padding-left: 25px;">
-                        <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">mic</span>Allow microphone access when prompted by your browser</li>
-                        <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">hourglass_top</span>Wait for the model to load</li>
-                        <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">play_circle</span>Click the "Start Listening" button to begin sound detection</li>
-                        <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">notifications_active</span>The system will display alerts when it detects FPV Drone sounds</li>
-                        <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">pause_circle</span>Click "Stop Listening" to pause detection</li>
-                    </ol>
-                    <p style="margin-bottom: 0;"><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">warning</span><strong>Note:</strong> This system requires microphone access to function. If you deny access, you will need to enable it in your browser settings and reload the page.</p>
+        @keyframes pulse-idle {
+            0% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4); opacity: 1; }
+            70% { box-shadow: 0 0 0 15px rgba(76, 175, 80, 0); opacity: 0; }
+            100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); opacity: 0; }
+        }
+        
+        /* Active state (red) */
+        #start-button.active {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), 0 0 0 8px rgba(255, 61, 61, 0.2);
+        }
+        
+        #start-button.active .mic-icon {
+            color: #ff3d3d;
+            text-shadow: 0 0 10px rgba(255, 61, 61, 0.5);
+        }
+        
+        #start-button.active .status-icon {
+            color: #ff3d3d;
+        }
+        
+        #start-button.active .pulse-effect {
+            animation: pulse-active 2s infinite;
+        }
+        
+        /* Idle state (green) */
+        #start-button.idle {
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5), 0 0 0 8px rgba(76, 175, 80, 0.2);
+        }
+        
+        #start-button.idle .mic-icon {
+            color: #4caf50;
+            text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+        
+        #start-button.idle .status-icon {
+            color: #4caf50;
+        }
+        
+        #start-button.idle .pulse-effect {
+            animation: pulse-idle 2s infinite;
+        }
+        
+        /* Hover effects */
+        #start-button:not([disabled]):hover {
+            transform: translateY(-5px);
+        }
+        
+        #start-button:not([disabled]):hover .mic-icon {
+            transform: scale(1.1);
+        }
+        
+        /* Disabled state */
+        #start-button[disabled] .mic-icon {
+            color: #bbbbbb;
+            text-shadow: none;
+        }
+        
+        #start-button[disabled] .status-icon {
+            color: #bbbbbb;
+        }
+    </style>
+
+    <!-- Foldable About Drone Sentinel Card -->
+    <div class="info-section" style="margin-bottom: 20px; background-color: #1e1e1e; border-radius: 8px; overflow: hidden;">
+        <!-- About card header -->
+        <div class="card-header" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 15px; border-left: 4px solid #ff3d3d;" onclick="toggleAboutCard()">
+            <h2 style="margin: 0;"><span class="material-icons" style="color: #ff3d3d; margin-right: 8px;">info</span>About Drone Sentinel</h2>
+            <span class="material-icons" id="about-card-toggle" style="color: #ff3d3d;">expand_more</span>
+        </div>
+        
+        <!-- About card content -->
+        <div id="about-card-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
+            <div style="padding: 0 15px 15px 15px; border-left: 4px solid #ff3d3d;">
+                <p>Drone Sentinel is an AI-powered sound detection system that listens for specific sounds in the environment and provides real-time alerts.</p>
+                <p>The system uses TensorFlow.js and a pre-trained model to detect drone sounds in your environment.</p>
+                
+                <!-- Non-foldable How to Use section -->
+                <div class="usage-instructions" style="background-color: #2c2c2c; padding: 15px; border-radius: 6px; margin-top: 15px;">
+                    <div style="display: flex; align-items: center;">
+                        <h3 style="margin: 0;"><span class="material-icons" style="color: #ff3d3d; margin-right: 8px;">help_outline</span>How to Use</h3>
+                    </div>
+                    <div style="padding-top: 15px;">
+                        <ol style="padding-left: 25px;">
+                            <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">mic</span>Allow microphone access when prompted by your browser</li>
+                            <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">hourglass_top</span>Wait for the model to load</li>
+                            <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">play_circle</span>Click the "Start Listening" button to begin sound detection</li>
+                            <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">notifications_active</span>The system will display alerts when it detects FPV Drone sounds</li>
+                            <li><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">pause_circle</span>Click "Stop Listening" to pause detection</li>
+                        </ol>
+                        <p style="margin-bottom: 0;"><span class="material-icons" style="vertical-align: middle; color: #ff3d3d;">warning</span><strong>Note:</strong> This system requires microphone access to function. If you deny access, you will need to enable it in your browser settings and reload the page.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -723,10 +809,15 @@
     <script>
         document.getElementById('current-year').textContent = new Date().getFullYear();
         
-        // Function to toggle the How to Use section visibility
-        function toggleHowToUse() {
-            const content = document.getElementById('how-to-use-content');
-            const toggle = document.getElementById('how-to-use-toggle');
+        // Function to handle any click events inside the About card
+        function handleAboutCardClick(event) {
+            // Ignore clicks on specific elements if needed
+        }
+        
+        // Function to toggle the About card visibility
+        function toggleAboutCard() {
+            const content = document.getElementById('about-card-content');
+            const toggle = document.getElementById('about-card-toggle');
             
             if (content.style.maxHeight === '0px' || content.style.maxHeight === '') {
                 content.style.maxHeight = content.scrollHeight + 'px';
@@ -742,14 +833,77 @@
             window.location.href = '/test.html';
         }
         
-        // Add load event to expand the How to Use section by default once
+        // Update button state (colors and icons) when it changes state
         window.addEventListener('load', function() {
-            // Expand the How to Use section after a short delay
+            const startButton = document.getElementById('start-button');
+            const originalUpdateButtonState = window.updateButtonState;
+            
+            // Initialize the button state
             setTimeout(function() {
-                const content = document.getElementById('how-to-use-content');
-                content.style.maxHeight = content.scrollHeight + 'px';
-                document.getElementById('how-to-use-toggle').textContent = 'expand_less';
-            }, 500);
+                if (!startButton.disabled) {
+                    startButton.classList.add('idle');
+                    const statusIcon = startButton.querySelector('.status-icon');
+                    if (statusIcon) {
+                        statusIcon.textContent = 'play_circle';
+                    }
+                }
+            }, 2000); // Wait for initialization
+            
+            // Override the button state update function if it exists
+            if (typeof window.updateButtonState === 'function') {
+                window.updateButtonState = function(isListening) {
+                    // Call the original function
+                    originalUpdateButtonState(isListening);
+                    
+                    // Reset classes
+                    startButton.classList.remove('idle', 'active');
+                    
+                    // Update the button appearance
+                    if (isListening) {
+                        // Active state (red)
+                        startButton.classList.add('active');
+                        
+                        // Update status icon
+                        const statusIcon = startButton.querySelector('.status-icon');
+                        if (statusIcon) {
+                            statusIcon.textContent = 'hearing';
+                        }
+                        
+                        // Activate pulse effect
+                        const pulseEffect = startButton.querySelector('.pulse-effect');
+                        if (pulseEffect) {
+                            pulseEffect.style.opacity = '1';
+                        }
+                    } else if (!startButton.disabled) {
+                        // Idle state (green)
+                        startButton.classList.add('idle');
+                        
+                        // Update status icon
+                        const statusIcon = startButton.querySelector('.status-icon');
+                        if (statusIcon) {
+                            statusIcon.textContent = 'play_circle';
+                        }
+                        
+                        // Activate pulse effect
+                        const pulseEffect = startButton.querySelector('.pulse-effect');
+                        if (pulseEffect) {
+                            pulseEffect.style.opacity = '1';
+                        }
+                    }
+                };
+            }
+        });
+        
+        // Add load event to initialize the foldable sections
+        window.addEventListener('load', function() {
+            // Initialize the About card (collapsed)
+            setTimeout(function() {
+                const aboutCardContent = document.getElementById('about-card-content');
+                aboutCardContent.style.maxHeight = '0px';
+                document.getElementById('about-card-toggle').textContent = 'expand_more';
+            }, 300);
+            
+            // No need to initialize the How to Use section anymore as it's always visible
         });
     </script>
     
