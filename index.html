@@ -20,6 +20,21 @@
     <script src="translations.js" defer></script>
     <script src="i18n.js" defer></script>
     
+    <!-- Service Worker Registration for offline functionality -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registered with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+    
     <!-- Font definitions -->
     <style>
         @font-face {
@@ -139,7 +154,113 @@
         }
         
         .info-section {
-            margin-top: 30px;
+            margin-bottom: 5px;
+        }
+        
+        /* Custom sound upload styling */
+        .settings-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 10px;
+        }
+        
+        .settings-row label {
+            min-width: 120px;
+            color: #e0e0e0;
+        }
+        
+        .settings-row select, .settings-row input[type="file"] {
+            flex: 1;
+            padding: 8px 12px;
+            background-color: #1e1e1e;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #e0e0e0;
+        }
+        
+        .settings-row button {
+            padding: 8px 15px;
+            background-color: #333;
+            color: #e0e0e0;
+            border: 1px solid #555;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .settings-row button:hover {
+            background-color: #444;
+        }
+        
+        .custom-sounds-container {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #1e1e1e;
+            border: 1px solid #444;
+            border-radius: 4px;
+        }
+        
+        .custom-sound-item {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .custom-sound-item:last-child {
+            border-bottom: none;
+        }
+        
+        .custom-sound-name {
+            flex: 1;
+            color: #e0e0e0;
+        }
+        
+        .sound-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .sound-actions button {
+            padding: 4px 8px;
+            font-size: 12px;
+            background-color: transparent;
+        }
+        
+        .sound-actions button.delete-sound {
+            color: #ff3d3d;
+        }
+        
+        details summary {
+            cursor: pointer;
+            padding: 8px 0;
+            color: #e0e0e0;
+            user-select: none;
+        }
+        
+        .no-sounds-message {
+            color: #888;
+            font-style: italic;
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .offline-indicator {
+            display: none;
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background-color: #333;
+            color: #e0e0e0;
+            padding: 10px 15px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        
+        .offline-indicator.visible {
+            display: block;
         }
         
         /* Styles for system status indicators */
@@ -842,20 +963,33 @@
             
             <!-- Alarm sound selection -->
             <div style="margin-top: 20px;">
-                <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                    <span class="material-icons" style="color: #ff3d3d; margin-right: 8px;">notifications_active</span>
-                    <h4 style="margin: 0; color: #e0e0e0; font-size: 16px;" data-translate="alarmSounds">Alarm Sound</h4>
-                </div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <select id="alarm-sound-select" style="flex: 1; padding: 8px 12px; background-color: #1e1e1e; border: 1px solid #444; border-radius: 4px; color: #e0e0e0;">
-                        <option value="alarm.mp3" data-translate="classicAlarm">Classic Alarm</option>
-                        <option value="siren.mp3" data-translate="sirenAlarm">Siren</option>
-                        <option value="buzz.mp3" data-translate="buzzAlarm">Buzzer</option>
+                <div class="settings-row">
+                    <label for="alarm-sound-select" data-translate="alarmSounds">Alarm Sound</label>
+                    <select id="alarm-sound-select">
+                        <option value="classic" data-translate="classicAlarm">Classic Alarm</option>
+                        <option value="siren" data-translate="sirenAlarm">Siren</option>
+                        <option value="buzzer" data-translate="buzzAlarm">Buzzer</option>
+                        <!-- Custom sounds will be added here dynamically -->
                     </select>
-                    <button id="test-alarm-sound" class="alarm-test-button">
-                        <span class="material-icons" style="margin-right: 5px;">play_circle</span>
-                        <span data-translate="test">Test</span>
-                    </button>
+                    <button id="test-alarm-button" data-translate="test">Test</button>
+                </div>
+                
+                <!-- Custom Alarm Sound Upload -->
+                <div class="settings-row custom-sound-upload">
+                    <label for="custom-sound-upload" data-translate="customAlarmSound">Custom Alarm</label>
+                    <input type="file" id="custom-sound-upload" accept="audio/*" />
+                    <button id="save-sound-button" data-translate="saveSound">Save</button>
+                </div>
+                
+                <!-- Custom Sound Management -->
+                <div class="settings-row">
+                    <details>
+                        <summary data-translate="manageSounds">Manage Custom Sounds</summary>
+                        <div id="custom-sounds-list" class="custom-sounds-container">
+                            <!-- Custom sounds will be listed here dynamically -->
+                            <p data-translate="noCustomSounds" class="no-sounds-message">No custom sounds found</p>
+                        </div>
+                    </details>
                 </div>
             </div>
             
@@ -1060,6 +1194,12 @@
             100% { background-color: #2c2c2c; }
         }
     </style>
+    <div id="site-version"></div>
+    
+    <!-- Offline mode indicator -->
+    <div id="offline-indicator" class="offline-indicator">
+        <span class="material-icons">cloud_off</span>
+        <span data-translate="offlineMode">Offline Mode</span>
+    </div>
 </body>
 </html>
-

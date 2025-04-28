@@ -87,7 +87,25 @@ const translations = {
         
         // Banner
         workInProgress: "Work in progress, click",
-        forSupport: "here for support"
+        forSupport: "here for support",
+        
+        // Custom sound upload
+        customAlarmSound: "Custom Alarm",
+        saveSound: "Save",
+        manageSounds: "Manage Custom Sounds",
+        noCustomSounds: "No custom sounds found",
+        testAlarm: "Test Alarm",
+        deleteSound: "Delete",
+        playSoundTest: "Play",
+        soundSaved: "Sound saved",
+        soundDeleted: "Sound deleted",
+        enterSoundName: "Enter a name for this sound",
+        invalidSound: "Invalid sound file",
+        
+        // Offline mode
+        offlineMode: "Offline Mode",
+        appCached: "App cached for offline use",
+        reconnected: "Back online"
     },
     uk: {
         // Header and main UI
@@ -169,7 +187,25 @@ const translations = {
 
         // Banner
         workInProgress: "В розробці, натисніть",
-        forSupport: "тут для підтримки"
+        forSupport: "тут для підтримки",
+        
+        // Custom sound upload
+        customAlarmSound: "Користувацький сигнал",
+        saveSound: "Зберегти",
+        manageSounds: "Керувати звуками",
+        noCustomSounds: "Нема своїх звуків",
+        testAlarm: "Тест тривоги",
+        deleteSound: "Видалити",
+        playSoundTest: "Відтворити",
+        soundSaved: "Звук збережено",
+        soundDeleted: "Звук видалено",
+        enterSoundName: "Введіть назву цього звуку",
+        invalidSound: "Недійсний звуковий файл",
+        
+        // Offline mode
+        offlineMode: "Режим оффлайн",
+        appCached: "Додаток кешовано для оффлайн використання",
+        reconnected: "Знову онлайн"
     },
     lv: {
         // Header and main UI
@@ -253,6 +289,24 @@ const translations = {
         
         // Banner
         workInProgress: "Darbs procesā, noklikšķiniet",
-        forSupport: "šeit atbalstam"
+        forSupport: "šeit atbalstam",
+        
+        // Custom sound upload
+        customAlarmSound: "Pielāgots trauksmes signāls",
+        saveSound: "Saglabāt",
+        manageSounds: "Pārvaldīt skaņas",
+        noCustomSounds: "Nav atrasta neviena pielāgota skaņa",
+        testAlarm: "Pārbaudīt trauksmi",
+        deleteSound: "Dzēst",
+        playSoundTest: "Atskaņot",
+        soundSaved: "Skaņa saglabāta",
+        soundDeleted: "Skaņa dzēsta",
+        enterSoundName: "Ievadiet šīs skaņas nosaukumu",
+        invalidSound: "Nederīgs skaņas fails",
+        
+        // Offline mode
+        offlineMode: "Bezsaistes režīms",
+        appCached: "Lietotne saglabāta bezsaistes lietošanai",
+        reconnected: "Atkal tiešsaistē"
     }
 };
