@@ -146,15 +146,28 @@ function updateGauge(value, label) {
     // Always use "FPV Drone" for gauge label text if available
     const droneLabel = (labels.length > 1) ? labels[1] : label;
     
-    // Update the label
+    // Update the label with translations support using the i18n system
     if (percentage > 60) {
-        gaugeLabel.textContent = `${droneLabel} detected!`;
+        // Use i18n system if available
+        if (window.i18n) {
+            gaugeLabel.textContent = window.i18n.t('droneDetected');
+        } else {
+            gaugeLabel.textContent = `${droneLabel} detected!`;
+        }
         gaugeLabel.style.color = '#d32f2f'; // Red for high confidence
     } else if (percentage > 30) {
-        gaugeLabel.textContent = `Possible ${droneLabel}`;
+        if (window.i18n) {
+            gaugeLabel.textContent = window.i18n.t('possibleDrone');
+        } else {
+            gaugeLabel.textContent = `Possible ${droneLabel}`;
+        }
         gaugeLabel.style.color = '#f57c00'; // Orange for medium confidence
     } else {
-        gaugeLabel.textContent = 'Listening...';
+        if (window.i18n) {
+            gaugeLabel.textContent = window.i18n.t('listening');
+        } else {
+            gaugeLabel.textContent = 'Listening...';
+        }
         gaugeLabel.style.color = '#555'; // Default color for low/no detection
     }
 }
@@ -760,6 +773,7 @@ function updateUI(prediction) {
 let alarmActive = false;
 let alarmSound = null;
 let alarmVolume = 0.8; // Default volume (0.0 to 1.0)
+let selectedAlarmSound = 'alarm.mp3'; // Default alarm sound
 
 // Initialize alarm audio system
 function initAlarmAudio() {
@@ -770,6 +784,15 @@ function initAlarmAudio() {
         console.error('Alarm sound element not found in the document');
         return false;
     }
+    
+    // Load saved alarm sound preference if available
+    const savedSound = getCookie('alarmSound');
+    if (savedSound) {
+        selectedAlarmSound = savedSound;
+    }
+    
+    // Update the source to the selected sound
+    updateAlarmSource();
     
     // Set initial volume
     alarmSound.volume = alarmVolume;
@@ -787,7 +810,82 @@ function initAlarmAudio() {
         console.log('Alarm sound loaded and ready to play');
     };
     
+    // Setup alarm sound selector
+    setupAlarmSoundSelector();
+    
     return true;
+}
+
+// Function to update the alarm sound source
+function updateAlarmSource() {
+    if (!alarmSound) return false;
+    
+    // Create source element if it doesn't exist
+    if (alarmSound.querySelector('source')) {
+        alarmSound.querySelector('source').src = `sounds/${selectedAlarmSound}`;
+    } else {
+        const source = document.createElement('source');
+        source.src = `sounds/${selectedAlarmSound}`;
+        source.type = 'audio/mpeg';
+        alarmSound.appendChild(source);
+    }
+    
+    // Reload the audio with the new source
+    alarmSound.load();
+    
+    return true;
+}
+
+// Function to set up the alarm sound selector
+function setupAlarmSoundSelector() {
+    const soundSelector = document.getElementById('alarm-sound-select');
+    const testButton = document.getElementById('test-alarm-sound');
+    
+    if (!soundSelector || !testButton) {
+        console.error('Alarm sound selector elements not found');
+        return false;
+    }
+    
+    // Set the initial selection
+    for (let i = 0; i < soundSelector.options.length; i++) {
+        if (soundSelector.options[i].value === selectedAlarmSound) {
+            soundSelector.selectedIndex = i;
+            break;
+        }
+    }
+    
+    // Add change event listener to the selector
+    soundSelector.addEventListener('change', function() {
+        selectedAlarmSound = this.value;
+        updateAlarmSource();
+        // Save selection to cookie
+        setCookie('alarmSound', selectedAlarmSound, 30);
+        console.log('Alarm sound changed to:', selectedAlarmSound);
+    });
+    
+    // Add click event listener to the test button
+    testButton.addEventListener('click', function() {
+        testAlarmSound();
+    });
+    
+    return true;
+}
+
+// Function to test the selected alarm sound
+function testAlarmSound() {
+    // Make sure we're not in the middle of a real alarm
+    if (alarmActive) return;
+    
+    // Create a temporary audio element for testing
+    const testAudio = new Audio(`sounds/${selectedAlarmSound}`);
+    testAudio.volume = alarmVolume;
+    
+    // Play for just 2 seconds
+    testAudio.play();
+    setTimeout(() => {
+        testAudio.pause();
+        testAudio.currentTime = 0;
+    }, 2000);
 }
 
 // Function to trigger the alarm when a drone is detected
@@ -908,6 +1006,10 @@ async function initApp() {
     initConfidenceThresholdSlider();
     console.log('Confidence threshold slider initialized with value:', confidenceThreshold);
     
+    // Initialize alarm audio system
+    initAlarmAudio();
+    console.log('Alarm audio system initialized');
+    
     // Add global functions for the alarm system
     window.dismissAlarm = dismissAlarm;
     
@@ -947,17 +1049,95 @@ async function initApp() {
         analyzeButton.addEventListener('click', analyzeAudioFile);
     }
     
+    // Set up language translations support
+    if (typeof window.i18n !== 'undefined') {
+        console.log('i18n system detected');
+        
+        // Register callback to update dynamic UI elements when language changes
+        document.addEventListener('languageChanged', function(event) {
+            // Update UI elements with new language
+            updateLanguageSpecificElements();
+            console.log(`Language changed to ${event.detail.language}, updating dynamic UI elements`);
+        });
+    }
+    
     // Add spectrogram visualization for file uploads too
     if (spectrogramInitialized) {
-        document.getElementById('audio-upload').addEventListener('change', (event) => {
-            if (event.target.files && event.target.files[0]) {
-                // When a file is selected, we'll prepare for visualization
-                // The actual visualization happens during analysis
-                console.log('File selected for potential spectrogram visualization');
-            }
+        const audioUpload = document.getElementById('audio-upload');
+        if (audioUpload) {
+            audioUpload.addEventListener('change', (event) => {
+                if (event.target.files && event.target.files[0]) {
+                    // When a file is selected, we'll prepare for visualization
+                    // The actual visualization happens during analysis
+                    console.log('File selected for potential spectrogram visualization');
+                }
+            });
+        }
+    }
+    
+        // Alarm sound selection integration
+    const alarmSoundSelect = document.getElementById('alarm-sound-select');
+    if (alarmSoundSelect) {
+        alarmSoundSelect.addEventListener('change', (event) => {
+            selectedAlarmSound = event.target.value;
+            // Update alarm source with new sound
+            updateAlarmSource();
+            // Save preference
+            setCookie('alarmSound', selectedAlarmSound, 30);
         });
     }
 }
 
 // Add event listener to initialize when the document is ready
 document.addEventListener('DOMContentLoaded', initApp);
+
+/**
+ * Updates dynamic UI elements that need translation after language change
+ */
+function updateLanguageSpecificElements() {
+    // Check if i18n system is available
+    if (!window.i18n) return;
+    
+    // Update gauge label based on current state
+    const gaugeLabel = document.getElementById('gauge-label');
+    const gaugeValue = document.getElementById('gauge-value');
+    
+    if (gaugeLabel && gaugeValue) {
+        const percentageText = gaugeValue.textContent || '0%';
+        const percentage = parseFloat(percentageText);
+        
+        if (percentage > 60) {
+            gaugeLabel.textContent = window.i18n.t('droneDetected');
+        } else if (percentage > 30) {
+            gaugeLabel.textContent = window.i18n.t('possibleDrone');
+        } else {
+            gaugeLabel.textContent = window.i18n.t('listening');
+        }
+    }
+    
+    // Update start/stop button text
+    const startButton = document.getElementById('start-button');
+    if (startButton) {
+        const textSpan = startButton.querySelector('.button-text');
+        if (textSpan) {
+            const isListening = microphoneEnabled;
+            textSpan.textContent = isListening ? 
+                window.i18n.t('stopDetection') : 
+                window.i18n.t('startDetection');
+        }
+    }
+    
+    // Update alarm sound selector label
+    const alarmSoundLabel = document.querySelector('label[for="alarm-sound-select"]');
+    if (alarmSoundLabel) {
+        alarmSoundLabel.textContent = window.i18n.t('alarmSound');
+    }
+    
+    // Update alarm test button
+    const testButton = document.getElementById('test-alarm-button');
+    if (testButton) {
+        testButton.textContent = window.i18n.t('testAlarm');
+    }
+    
+    console.log('Dynamic UI elements updated with new language');
+}
