@@ -17,23 +17,6 @@
     <!-- Link to our custom scripts (defer ensures DOM is loaded before execution) -->
     <script src="main.js" defer></script>
     <script src="version.js" defer></script>
-    <script src="translations.js" defer></script>
-    <script src="i18n.js" defer></script>
-    
-    <!-- Service Worker Registration for offline functionality -->
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js')
-                    .then(registration => {
-                        console.log('ServiceWorker registered with scope:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.error('ServiceWorker registration failed:', error);
-                    });
-            });
-        }
-    </script>
     
     <!-- Font definitions -->
     <style>
