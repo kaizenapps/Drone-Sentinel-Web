@@ -17,6 +17,7 @@
     <!-- Link to our custom scripts (defer ensures DOM is loaded before execution) -->
     <script src="main.js" defer></script>
     <script src="version.js" defer></script>
+    <script src="translations.js"></script>
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-5VS7X8R13D"></script>
@@ -781,10 +782,10 @@
                 <span class="material-icons mic-icon" style="font-size: 50px; color: #bbbbbb; text-shadow: 0 0 10px rgba(187, 187, 187, 0.5); transition: all 0.3s ease;">mic</span>
             </div>
             
-            <!-- Status icon below button -->
+            <!-- Status icon below button
             <div style="position: absolute; top: 130px; left: 50%; transform: translateX(-50%); white-space: nowrap;">
                 <span class="material-icons status-icon" style="font-size: 24px; color: #bbbbbb; transition: all 0.3s ease;">hourglass_top</span>
-            </div>
+            </div> -->
             
             <!-- Pulse effect around button -->
             <div class="pulse-effect" style="position: absolute; top: -8px; left: -8px; right: -8px; bottom: -8px; border-radius: 50%; opacity: 0;"></div>
@@ -946,7 +947,7 @@
         <div style="margin: 20px 0; padding: 15px; background-color: #2c2c2c; border-radius: 8px; border-left: 3px solid #ff3d3d;">
             <div style="display: flex; align-items: center; margin-bottom: 10px;">
                 <span class="material-icons" style="color: #ff3d3d; margin-right: 8px;">tune</span>
-                <h4 style="margin: 0; color: #e0e0e0; font-size: 16px;" data-translate="detectionSensitivity">Detection Sensitivity:</h4>
+                <h4 style="margin: 0; color: #e0e0e0; font-size: 16px;" data-translate="detectionSensitivity">Detection Threshold:</h4>
                 <span id="threshold-value" style="margin-left: auto; background-color: #1e1e1e; padding: 4px 12px; border-radius: 20px; font-family: 'Exo', sans-serif; color: #ff3d3d; box-shadow: 0 2px 5px rgba(0,0,0,0.2);">60%</span>
             </div>
             <div style="display: flex; align-items: center; margin-bottom: 10px;">
@@ -955,34 +956,27 @@
             
             <!-- Alarm sound selection -->
             <div style="margin-top: 20px;">
-                <div class="settings-row">
+                <!-- <div class="settings-row">
                     <label for="alarm-sound-select" data-translate="alarmSounds">Alarm Sound</label>
                     <select id="alarm-sound-select">
                         <option value="classic" data-translate="classicAlarm">Classic Alarm</option>
                         <option value="siren" data-translate="sirenAlarm">Siren</option>
                         <option value="buzzer" data-translate="buzzAlarm">Buzzer</option>
-                        <!-- Custom sounds will be added here dynamically -->
+                       
                     </select>
                     <button id="test-alarm-button" data-translate="test">Test</button>
-                </div>
+                </div> -->
+             <!-- Language Selector -->
+             <div class="settings-row language-select">
+                <label for="language-select" data-translate="selectLanguage">Select Language</label>
+                <select id="language-select">
+                  <option value="en">English</option>
+                  <option value="uk">Українська</option>
+                </select>
+                <button id="test-alarm-button" data-translate="test">Test</button>
+              </div>
                 
-                <!-- Custom Alarm Sound Upload -->
-                <div class="settings-row custom-sound-upload">
-                    <label for="custom-sound-upload" data-translate="customAlarmSound">Custom Alarm</label>
-                    <input type="file" id="custom-sound-upload" accept="audio/*" />
-                    <button id="save-sound-button" data-translate="saveSound">Save</button>
-                </div>
-                
-                <!-- Custom Sound Management -->
-                <div class="settings-row">
-                    <details>
-                        <summary data-translate="manageSounds">Manage Custom Sounds</summary>
-                        <div id="custom-sounds-list" class="custom-sounds-container">
-                            <!-- Custom sounds will be listed here dynamically -->
-                            <p data-translate="noCustomSounds" class="no-sounds-message">No custom sounds found</p>
-                        </div>
-                    </details>
-                </div>
+             
             </div>
             
             <div style="display: flex; justify-content: space-between; width: 100%;">
@@ -1008,7 +1002,7 @@
                     <span>100%</span>
                 </div>
                 <div class="gauge-value" id="gauge-value">0%</div>
-                <div class="gauge-label" id="gauge-label">Waiting...</div>
+                <div class="gauge-label" id="gauge-label" data-translate="waiting" >Waiting...</div>
             </div>
             <div class="predictions-bars" id="predictions-bars">
                 <!-- Will be dynamically populated with prediction bars -->
@@ -1052,7 +1046,7 @@
     
     <!-- Alarm sound effects -->
     <audio id="alarm-sound" preload="auto" loop>
-        <source src="sounds/alarm.mp3" type="audio/mpeg">
+        <source src="sounds/alarm-en.mp3" type="audio/mpeg">
         <span data-translate="browserNotSupported">Your browser does not support the audio element.</span>
     </audio>
     
@@ -1061,6 +1055,8 @@
     <!-- Update year automatically and add How to Use toggle functionality -->
     <script>
         document.getElementById('current-year').textContent = new Date().getFullYear();
+
+
         
         // Function to handle any click events inside the About card
         function handleAboutCardClick(event) {
@@ -1158,6 +1154,62 @@
             
             // No need to initialize the How to Use section anymore as it's always visible
         });
+
+
+
+        let currentLang = 'en';
+
+// Load saved language or detect from browser
+function getInitialLanguage() {
+  const savedLang = localStorage.getItem('selectedLanguage');
+  if (savedLang) return savedLang;
+
+  const browserLang = navigator.language.slice(0, 2);
+  const supportedLangs = ['en', 'uk'];
+  return supportedLangs.includes(browserLang) ? browserLang : 'en';
+}
+
+function translatePage(lang) {
+  currentLang = lang;
+  localStorage.setItem('selectedLanguage', lang); // Save selection
+
+  const elements = document.querySelectorAll('[data-translate]');
+  elements.forEach(el => {
+    const key = el.getAttribute('data-translate');
+    const translation = translations[lang][key];
+    if (translation) {
+      el.textContent = translation;
+    }
+  });
+
+  // Sync language selector dropdown with current language
+  const selector = document.getElementById('language-select');
+  if (selector) selector.value = lang;
+
+
+   // Change alarm sound source based on language
+   const alarmAudio = document.getElementById('alarm-sound');
+  const alarmSource = alarmAudio.querySelector('source');
+
+  // Choose source path based on language
+  if (lang === 'uk') {
+    alarmSource.src = 'sounds/alarm-uk.mp3';
+  } else {
+    alarmSource.src = 'sounds/alarm-en.mp3';
+  }
+
+  alarmAudio.load(); // Reload audio with new source
+}
+
+// Listen for language switch
+document.getElementById('language-select').addEventListener('change', (e) => {
+  translatePage(e.target.value);
+});
+
+// Initial load
+const initialLang = getInitialLanguage();
+translatePage(initialLang);
+  
     </script>
     
     <!-- Add alarm-related animations -->
