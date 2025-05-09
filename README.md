@@ -8,7 +8,7 @@ Project Uriel is a cutting-edge web-based drone detection system that uses audio
 
 ![{4BE0C097-894A-438B-9391-69F3045F805E}](https://github.com/user-attachments/assets/98f03e2c-6f4e-451f-b6ab-dd3230b5d586)
 
-![image](https://github.com/user-attachments/assets/1c6acd55-3404-4dba-bfc1-57597b49d964)
+
 
 
 ## 🎥 Demo
