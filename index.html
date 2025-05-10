@@ -832,7 +832,18 @@
     <!-- Work in progress banner -->
     <div style="position: fixed; top: 0; left: 0; width: 100%; background: linear-gradient(90deg, #ff3d3d, #a10000); color: white; text-align: center; padding: 15px; font-size: 18px; font-weight: bold; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.3); letter-spacing: 0.5px;">
         <span data-translate="workInProgress">Work in progress, click</span> <a href="https://forms.clickup.com/20570259/f/kkr4k-4451/NMY2NBB72FOHF7K15R" style="color: white; text-decoration: underline; font-weight: bold; text-shadow: 0 0 5px rgba(0,0,0,0.3);" target="_blank">(here)</a> <span data-translate="forSupport">for support</span>
-
+    </div>
+    
+    <!-- Language Toggle -->
+    <div style="position: fixed; top: 15px; right: 20px; z-index: 1001;">
+        <div class="language-toggle" style="display: flex; gap: 10px; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 20px; backdrop-filter: blur(5px);">
+            <button onclick="translatePage('en')" class="lang-btn" style="background: none; border: none; padding: 5px; cursor: pointer; border-radius: 50%; transition: all 0.3s ease;">
+                <img src="/images/us.jpg" alt="English" style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent;" id="en-flag">
+            </button>
+            <button onclick="translatePage('uk')" class="lang-btn" style="background: none; border: none; padding: 5px; cursor: pointer; border-radius: 50%; transition: all 0.3s ease;">
+                <img src="/images/uk.png" alt="Ukrainian" style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent;" id="uk-flag">
+            </button>
+        </div>
     </div>
     
     <!-- Add padding to the top of the page to account for the fixed banner -->
@@ -1027,40 +1038,7 @@
             
             <!-- Alarm sound selection -->
             <div style="margin-top: 20px;">
-                <!-- <div class="settings-row">
-                    <label for="alarm-sound-select" data-translate="alarmSounds">Alarm Sound</label>
-                    <select id="alarm-sound-select">
-                        <option value="classic" data-translate="classicAlarm">Classic Alarm</option>
-                        <option value="siren" data-translate="sirenAlarm">Siren</option>
-                        <option value="buzzer" data-translate="buzzAlarm">Buzzer</option>
-                       
-                    </select>
-                    <button id="test-alarm-button" data-translate="test">Test</button>
-                </div> -->
-             <!-- Language Selector -->
-             <div class="settings-row language-select">
-                <label for="language-select" data-translate="selectLanguage">Select Language</label>
-                <div class="custom-select-wrapper" id="languageDropdown">
-                    <div class="custom-select" id="selectedOption">
-                      <img src="/images/us.jpg" alt="English Flag" />
-                      <span>English</span>
-                    </div>
-                    <div class="custom-options" id="options">
-                      <div class="custom-option" data-value="en" data-img="/images/us.jpg">
-                        <img src="/images/us.jpg" alt="English Flag" />
-                        <span>English</span>
-                      </div>
-                      <div class="custom-option" data-value="uk" data-img="/images/uk.png">
-                        <img src="/images/uk.png" alt="Ukrainian Flag" />
-                        <span>Українська</span>
-                      </div>
-                    </div>
-                    <input type="hidden" id="language-select" name="language" value="en" />
-                  </div>
                 <button id="test-alarm-button" data-translate="test">Test</button>
-              </div>
-                
-             
             </div>
             
             <div style="display: flex; justify-content: space-between; width: 100%;">
@@ -1254,84 +1232,30 @@ function getInitialLanguage() {
 }
 
 function translatePage(lang) {
-  currentLang = lang;
-  localStorage.setItem('selectedLanguage', lang); // Save selection
-  const selected = dropdown.querySelector("#selectedOption");
-  selected.innerHTML = lang==="en"?`<img src="/images/us.jpg" alt="" /><span>English</span>`:
-  `<img src="/images/uk.png" alt="" /><span>Українська</span>`;
+    currentLang = lang;
+    localStorage.setItem('selectedLanguage', lang);
+    
+    // Update flag borders to show active language
+    document.getElementById('en-flag').style.border = lang === 'en' ? '2px solid #ff3d3d' : '2px solid transparent';
+    document.getElementById('uk-flag').style.border = lang === 'uk' ? '2px solid #ff3d3d' : '2px solid transparent';
 
-  const elements = document.querySelectorAll('[data-translate]');
-  elements.forEach(el => {
-    const key = el.getAttribute('data-translate');
-    const translation = translations[lang][key];
-    if (translation) {
-      el.textContent = translation;
-    }
-  });
+    const elements = document.querySelectorAll('[data-translate]');
+    elements.forEach(el => {
+        const key = el.getAttribute('data-translate');
+        const translation = translations[lang][key];
+        if (translation) {
+            el.textContent = translation;
+        }
+    });
 
-  // Sync language selector dropdown with current language
-  const selector = document.getElementById('language-select');
-  if (selector) selector.value = lang;
-
-
-   // Change alarm sound source based on language
-   const alarmAudio = document.getElementById('alarm-sound');
-  const alarmSource = alarmAudio.querySelector('source');
-
-  // Choose source path based on language
-  if (lang === 'uk') {
-    alarmSource.src = 'sounds/alarm-uk.mp3';
-  } else {
-    alarmSource.src = 'sounds/alarm-en.mp3';
-  }
-
-  alarmAudio.load(); // Reload audio with new source
+    // Change alarm sound source based on language
+    const alarmAudio = document.getElementById('alarm-sound');
+    const alarmSource = alarmAudio.querySelector('source');
+    alarmSource.src = lang === 'uk' ? 'sounds/alarm-uk.mp3' : 'sounds/alarm-en.mp3';
+    alarmAudio.load();
 }
 
-// Listen for language switch
-document.getElementById('language-select').addEventListener('change', (e) => {
-  translatePage(e.target.value);
-});
-
-
-
-
-
-///Custom language Selector
-
-const dropdown = document.getElementById("languageDropdown");
-    const selected = dropdown.querySelector("#selectedOption");
-    const optionsContainer = dropdown.querySelector("#options");
-    const options = dropdown.querySelectorAll(".custom-option");
-    const hiddenInput = dropdown.querySelector("#language-select");
-  
-    selected.addEventListener("click", () => {
-      optionsContainer.classList.toggle("active");
-    });
-  
-    options.forEach(option => {
-      option.addEventListener("click", () => {
-        const img = option.getAttribute("data-img");
-        const text = option.innerText;
-        const value = option.getAttribute("data-value");
-        translatePage(value)
-        selected.innerHTML = `<img src="${img}" alt="" /><span>${text}</span>`;
-        hiddenInput.value = value;
-        optionsContainer.classList.remove("active");
-      });
-    });
-  
-    
-    document.addEventListener("click", function (e) {
-      if (!dropdown.contains(e.target)) {
-        optionsContainer.classList.remove("active");
-      }
-    });
-
-
-
-
-    // Initial load
+// Initial load
 const initialLang = getInitialLanguage();
 translatePage(initialLang);
   
@@ -1372,5 +1296,24 @@ translatePage(initialLang);
         <span class="material-icons">cloud_off</span>
         <span data-translate="offlineMode">Offline Mode</span>
     </div>
+
+    <!-- Add styles for language toggle -->
+    <style>
+        .language-toggle {
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .lang-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .lang-btn img {
+            transition: all 0.3s ease;
+        }
+
+        .lang-btn:hover img {
+            box-shadow: 0 0 10px rgba(255, 61, 61, 0.5);
+        }
+    </style>
 </body>
 </html>
