@@ -835,19 +835,95 @@
     </div>
     
     <!-- Language Toggle -->
-    <div style="position: fixed; top: 15px; right: 20px; z-index: 1001;">
-        <div class="language-toggle" style="display: flex; gap: 10px; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 20px; backdrop-filter: blur(5px);">
-            <button onclick="translatePage('en')" class="lang-btn" style="background: none; border: none; padding: 5px; cursor: pointer; border-radius: 50%; transition: all 0.3s ease;">
-                <img src="/images/us.jpg" alt="English" style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent;" id="en-flag">
-            </button>
-            <button onclick="translatePage('uk')" class="lang-btn" style="background: none; border: none; padding: 5px; cursor: pointer; border-radius: 50%; transition: all 0.3s ease;">
-                <img src="/images/uk.png" alt="Ukrainian" style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent;" id="uk-flag">
-            </button>
-        </div>
+    <div class="lang-toggle-fixed">
+<div class="lang-switch-ui">
+  <span class="lang-switch-label">EN</span>
+  <label class="lang-switch">
+    <input type="checkbox" id="lang-toggle">
+    <span class="lang-slider"></span>
+  </label>
+  <span class="lang-switch-label">UK</span>
+</div>
+
+<style>
+.lang-switch-ui {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-family: sans-serif;
+}
+.lang-toggle-fixed {
+  position: fixed;
+  top: 10px;
+  right: 20px;
+  z-index: 1001;
+}
+@media (max-width: 600px) {
+  .lang-toggle-fixed {
+    top: 85px;
+  }
+}
+
+.top-padding {
+  height: 60px;
+}
+@media (max-width: 600px) {
+  .top-padding {
+    height: 100px;
+  }
+}
+
+.lang-switch-label {
+  font-weight: bold;
+  color: #fff;
+  font-size: 1.3em;
+  letter-spacing: 2px;
+  opacity: 0.9;
+}
+.lang-switch {
+  position: relative;
+  display: inline-block;
+  width: 68px;
+  height: 36px;
+}
+.lang-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.lang-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: url('/images/us.jpg') no-repeat center/cover;
+  border-radius: 36px;
+  transition: background 0.4s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+.lang-slider:before {
+  position: absolute;
+  content: "";
+  height: 32px;
+  width: 32px;
+  left: 2px;
+  bottom: 2px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.4s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.20);
+}
+.lang-switch input:checked + .lang-slider {
+  background: url('/images/uk.png') no-repeat center/cover;
+}
+.lang-switch input:checked + .lang-slider:before {
+  transform: translateX(32px);
+}
+</style>
+
     </div>
     
     <!-- Add padding to the top of the page to account for the fixed banner -->
-    <div style="height: 60px;"></div>
+    <div class="top-padding"></div>
     
     <header>
         <h1><span class="material-icons">security</span><span data-translate="appTitleFull">Drone Sentinel System</span></h1>
@@ -1235,10 +1311,6 @@ function translatePage(lang) {
     currentLang = lang;
     localStorage.setItem('selectedLanguage', lang);
     
-    // Update flag borders to show active language
-    document.getElementById('en-flag').style.border = lang === 'en' ? '2px solid #ff3d3d' : '2px solid transparent';
-    document.getElementById('uk-flag').style.border = lang === 'uk' ? '2px solid #ff3d3d' : '2px solid transparent';
-
     const elements = document.querySelectorAll('[data-translate]');
     elements.forEach(el => {
         const key = el.getAttribute('data-translate');
@@ -1258,8 +1330,23 @@ function translatePage(lang) {
 // Initial load
 const initialLang = getInitialLanguage();
 translatePage(initialLang);
-  
-    </script>
+
+// Language toggle logic for switch
+// (Ensures toggle reflects saved language and calls translatePage on toggle)
+document.addEventListener('DOMContentLoaded', function() {
+  var toggle = document.getElementById('lang-toggle');
+  var selectedLang = localStorage.getItem('selectedLanguage') || 'en';
+  toggle.checked = (selectedLang === 'uk');
+  toggle.addEventListener('change', function() {
+    if (toggle.checked) {
+      translatePage('uk');
+    } else {
+      translatePage('en');
+    }
+  });
+});
+
+</script>
 
 
     
